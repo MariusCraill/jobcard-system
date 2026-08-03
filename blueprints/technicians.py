@@ -38,8 +38,8 @@ def new_technician():
             whatsapp=request.form.get("whatsapp", ""),
             role=request.form.get("role", "Technician"),
             specialties=request.form.get("specialties", ""),
-            max_jobcards=int(request.form.get("max_jobcards", 5)),
-            hourly_rate=float(request.form.get("hourly_rate", 0)),
+            max_jobcards=int(request.form.get("max_jobcards") or 5),
+            hourly_rate=float(request.form.get("hourly_rate") or 0),
             notes=request.form.get("notes", ""),
         )
         db_session.add(tech)
@@ -61,8 +61,8 @@ def edit_technician(tech_id):
         tech.whatsapp = request.form.get("whatsapp", "")
         tech.role = request.form.get("role", "Technician")
         tech.specialties = request.form.get("specialties", "")
-        tech.max_jobcards = int(request.form.get("max_jobcards", 5))
-        tech.hourly_rate = float(request.form.get("hourly_rate", 0))
+        tech.max_jobcards = int(request.form.get("max_jobcards") or 5)
+        tech.hourly_rate = float(request.form.get("hourly_rate") or 0)
         tech.notes = request.form.get("notes", "")
         tech.updated_at = datetime.utcnow()
         db_session.commit()

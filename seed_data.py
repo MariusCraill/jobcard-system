@@ -28,7 +28,7 @@ def seed():
         "company_address": "123 Business Central, Sandton, Johannesburg",
         "company_phone": "+27 11 555 0100",
         "company_email": "info@jobcardpro.co.za",
-        "next_job_number": "1001",
+        "next_job_number": "1008",
         "default_hourly_rate": "350",
         "whatsapp_enabled": "false",
         "whatsapp_provider": "log_only",

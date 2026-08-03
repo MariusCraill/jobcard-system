@@ -38,11 +38,28 @@ def _allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def _to_int(value, default=0):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
+def _to_float(value, default=0.0):
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _next_job_number():
     from blueprints.admin import get_setting
-    next_num = int(get_setting("next_job_number", "1001"))
-    job_number = f"JC-{next_num:05d}"
     from models import Setting
+    next_num = _to_int(get_setting("next_job_number", "1001"), 1001)
+    job_number = f"JC-{next_num}"
+    while db_session.query(JobCard).filter(JobCard.job_number == job_number).first():
+        next_num += 1
+        job_number = f"JC-{next_num}"
     s = db_session.query(Setting).filter(Setting.key == "next_job_number").first()
     if s:
         s.value = str(next_num + 1)
@@ -113,8 +130,8 @@ def new_jobcard():
             requested_date=date.today(),
             scheduled_date=datetime.strptime(request.form["scheduled_date"], "%Y-%m-%d").date() if request.form.get("scheduled_date") else None,
             due_date=datetime.strptime(request.form["due_date"], "%Y-%m-%d").date() if request.form.get("due_date") else None,
-            estimated_hours=float(request.form.get("estimated_hours", 0)),
-            estimated_cost=float(request.form.get("estimated_cost", 0)),
+            estimated_hours=_to_float(request.form.get("estimated_hours")),
+            estimated_cost=_to_float(request.form.get("estimated_cost")),
             customer_po=request.form.get("customer_po", ""),
             customer_notes=request.form.get("customer_notes", ""),
             internal_notes=request.form.get("internal_notes", ""),
@@ -133,17 +150,18 @@ def new_jobcard():
 
         if jc.technician_id:
             jc.status = JobCardStatus.assigned
-            tech = db_session.query(Technician).get(jc.technician_id)
+            tech = db_session.get(Technician, jc.technician_id)
             if tech:
                 _send_assignment_notifications(jc, tech)
 
         task_descriptions = request.form.getlist("task_description[]")
+        task_minutes = request.form.getlist("task_estimated[]")
         for i, desc in enumerate(task_descriptions):
             if desc.strip():
                 task = JobCardTask(
                     jobcard_id=jc.id,
                     description=desc.strip(),
-                    estimated_minutes=int(request.form.getlist("task_estimated[]")[i]) if i < len(request.form.getlist("task_estimated[]")) else 0,
+                    estimated_minutes=_to_int(task_minutes[i]) if i < len(task_minutes) else 0,
                     sort_order=i,
                 )
                 db_session.add(task)
@@ -191,15 +209,15 @@ def edit_jobcard(jobcard_id):
         jc.site_phone = request.form.get("site_phone", "")
         jc.scheduled_date = datetime.strptime(request.form["scheduled_date"], "%Y-%m-%d").date() if request.form.get("scheduled_date") else None
         jc.due_date = datetime.strptime(request.form["due_date"], "%Y-%m-%d").date() if request.form.get("due_date") else None
-        jc.estimated_hours = float(request.form.get("estimated_hours", 0))
-        jc.estimated_cost = float(request.form.get("estimated_cost", 0))
+        jc.estimated_hours = _to_float(request.form.get("estimated_hours"))
+        jc.estimated_cost = _to_float(request.form.get("estimated_cost"))
         jc.customer_po = request.form.get("customer_po", "")
         jc.customer_notes = request.form.get("customer_notes", "")
         jc.internal_notes = request.form.get("internal_notes", "")
         jc.updated_at = datetime.utcnow()
 
         if jc.technician_id and old_tech_id != jc.technician_id:
-            tech = db_session.query(Technician).get(jc.technician_id)
+            tech = db_session.get(Technician, jc.technician_id)
             if tech:
                 _send_assignment_notifications(jc, tech)
 
@@ -285,7 +303,7 @@ def add_task(jobcard_id):
     task = JobCardTask(
         jobcard_id=jc.id,
         description=request.form["description"],
-        estimated_minutes=int(request.form.get("estimated_minutes", 0)),
+        estimated_minutes=_to_int(request.form.get("estimated_minutes")),
         assigned_to=request.form.get("assigned_to", ""),
         notes=request.form.get("notes", ""),
         sort_order=db_session.query(JobCardTask).filter(JobCardTask.jobcard_id == jc.id).count() + 1,
@@ -320,8 +338,8 @@ def delete_task(jobcard_id, task_id):
 @jobcards_bp.route("/<int:jobcard_id>/add-part", methods=["POST"])
 def add_part(jobcard_id):
     jc = get_or_404(JobCard, jobcard_id)
-    qty = int(request.form.get("quantity", 1))
-    unit_cost = float(request.form.get("unit_cost", 0))
+    qty = _to_int(request.form.get("quantity"), 1)
+    unit_cost = _to_float(request.form.get("unit_cost"))
     part = PartUsed(
         jobcard_id=jc.id,
         part_name=request.form["part_name"],
@@ -344,7 +362,7 @@ def delete_part(jobcard_id, part_id):
     part = first_or_404(
         db_session.query(PartUsed).filter(PartUsed.id == part_id, PartUsed.jobcard_id == jobcard_id)
     )
-    jc = db_session.query(JobCard).get(jobcard_id)
+    jc = db_session.get(JobCard, jobcard_id)
     db_session.delete(part)
     if jc:
         _recalc_costs(jc)
@@ -357,10 +375,10 @@ def delete_part(jobcard_id, part_id):
 def add_time(jobcard_id):
     jc = get_or_404(JobCard, jobcard_id)
     from blueprints.admin import get_setting
-    rate = float(request.form.get("hourly_rate", 0)) or float(get_setting("default_hourly_rate", "350"))
+    rate = _to_float(request.form.get("hourly_rate")) or _to_float(get_setting("default_hourly_rate"), 350)
     start_str = request.form.get("start_time", "")
     end_str = request.form.get("end_time", "")
-    hours = float(request.form.get("hours", 0))
+    hours = _to_float(request.form.get("hours"))
 
     start_time = datetime.strptime(start_str, "%Y-%m-%dT%H:%M") if start_str else None
     end_time = datetime.strptime(end_str, "%Y-%m-%dT%H:%M") if end_str else None
