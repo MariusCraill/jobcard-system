@@ -174,3 +174,76 @@ input[type="file"]::file-selector-button {
     padding: 4px 8px;
     border-radius: 4px;
 }
+
+/* ===== Mobile / Responsive ===== */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 1040;
+}
+
+.sidebar-overlay.show {
+    display: block;
+}
+
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 1050;
+        width: var(--sidebar-width) !important;
+        padding: 1rem !important;
+        transform: translateX(-100%);
+        transition: transform 0.25s ease;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+    }
+
+    .sidebar .nav-link {
+        text-align: left !important;
+        padding: 10px 12px !important;
+    }
+
+    .sidebar .nav-link i {
+        margin-right: 0.5rem !important;
+    }
+
+    .sidebar .nav-link span,
+    .sidebar .fs-5,
+    .sidebar hr + div {
+        display: inline !important;
+    }
+
+    .main-content {
+        max-width: 100vw;
+    }
+
+    .content-area {
+        padding: 16px !important;
+    }
+
+    .navbar .navbar-text {
+        max-width: 40vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .content-area {
+        padding: 12px !important;
+    }
+
+    .card-body:has(table.table) {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+}

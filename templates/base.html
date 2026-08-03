@@ -9,8 +9,9 @@
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 </head>
 <body>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="d-flex">
-        <nav class="sidebar d-flex flex-column flex-shrink-0 p-3" id="sidebar">
+        <nav class="sidebar d-flex flex-column flex-shrink-0 p-3" id="sidebar" aria-label="Sidebar navigation">
             <a href="/" class="d-flex align-items-center mb-3 text-decoration-none">
                 <i class="bi bi-ticket-detailed fs-4 me-2 text-primary"></i>
                 <span class="fs-5 fw-bold text-primary">{{ app_settings.company_name }}</span>
@@ -62,15 +63,15 @@
         </nav>
 
         <main class="main-content flex-grow-1">
-            <nav class="navbar navbar-expand-lg border-bottom px-4">
-                <div class="container-fluid">
-                    <button class="btn btn-sm btn-outline-secondary me-3" id="sidebarToggle">
+            <nav class="navbar navbar-expand border-bottom px-2 px-md-4">
+                <div class="container-fluid flex-wrap">
+                    <button class="btn btn-sm btn-outline-secondary me-2 me-md-3" id="sidebarToggle" aria-controls="sidebar" aria-label="Toggle navigation">
                         <i class="bi bi-list"></i>
                     </button>
                     <span class="navbar-text fw-bold">{% block page_title %}{% endblock %}</span>
-                    <div class="ms-auto d-flex align-items-center gap-3">
+                    <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
                         {% block header_actions %}{% endblock %}
-                        <span class="text-muted small">
+                        <span class="text-muted small d-none d-sm-inline">
                             <i class="bi bi-clock me-1"></i>
                             <span id="currentTime"></span>
                         </span>
