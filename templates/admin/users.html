@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Users - {{ app_settings.company_name }}{% endblock %}
+{% block page_title %}User Management{% endblock %}
+{% block header_actions %}
+<a href="{{ url_for('admin.user_new') }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-person-plus me-1"></i>New User
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="fw-semibold">{{ u.username }}{% if u.id == current_user.id %} <span class="badge bg-info">you</span>{% endif %}</td>
+                        <td>{{ u.full_name or '-' }}</td>
+                        <td>
+                            <span class="badge bg-{{ 'danger' if u.role == 'admin' else 'primary' }}">
+                                {{ u.role }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if u.is_active else 'secondary' }}">
+                                {{ 'Active' if u.is_active else 'Disabled' }}
+                            </span>
+                        </td>
+                        <td class="small">{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'Never' }}</td>
+                        <td class="text-end">
+                            <a href="{{ url_for('admin.user_edit', user_id=u.id) }}" class="btn btn-sm btn-outline-secondary" title="Edit">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            {% if u.id != current_user.id %}
+                            <a href="{{ url_for('admin.user_toggle', user_id=u.id) }}" class="btn btn-sm btn-outline-{{ 'secondary' if u.is_active else 'success' }}" title="{{ 'Disable' if u.is_active else 'Enable' }}">
+                                <i class="bi bi-{{ 'person-slash' if u.is_active else 'person-check' }}"></i>
+                            </a>
+                            <form method="POST" action="{{ url_for('admin.user_delete', user_id=u.id) }}" class="d-inline" onsubmit="return confirm('Delete user {{ u.username }}?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">No users</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

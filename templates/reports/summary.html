@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block page_title %}Summary Report{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Summary{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body text-center">
+                <h3 class="text-primary mb-0">{{ total }}</h3>
+                <small class="text-muted">Total Job Cards</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body text-center">
+                <h3 class="text-warning mb-0">{{ open_count }}</h3>
+                <small class="text-muted">Open</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-info h-100">
+            <div class="card-body text-center">
+                <h3 class="text-info mb-0">{{ in_progress }}</h3>
+                <small class="text-muted">In Progress</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body text-center">
+                <h3 class="text-success mb-0">{{ completed }}</h3>
+                <small class="text-muted">Completed</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-currency-exchange me-1"></i> Financial Summary</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td>Total Revenue (Completed/Closed)</td><td class="fw-bold">R{{ total_revenue|round(2) }}</td></tr>
+                    <tr><td>Total Cost (Completed/Closed)</td><td class="fw-bold">R{{ total_cost|round(2) }}</td></tr>
+                    <tr><td>Gross Profit</td><td class="fw-bold text-success">R{{ (total_revenue - total_cost)|round(2) }}</td></tr>
+                    <tr><td>Avg Hours Per Job</td><td>{{ avg_hours|round(1) }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-people me-1"></i> People</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td>Active Customers</td><td class="fw-bold">{{ customers }}</td></tr>
+                    <tr><td>Active Technicians</td><td class="fw-bold">{{ technicians }}</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Dashboard{% endblock %}
+
+{% block content %}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-primary h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-subtitle text-muted mb-1">Open / In Progress</h6>
+                        <h2 class="card-text mb-0 text-primary">{{ open_count + in_progress }}</h2>
+                    </div>
+                    <i class="bi bi-ticket fs-2 text-primary opacity-50"></i>
+                </div>
+                <small class="text-muted">{{ open_count }} open, {{ in_progress }} in progress</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-success h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-subtitle text-muted mb-1">Completed</h6>
+                        <h2 class="card-text mb-0 text-success">{{ completed }}</h2>
+                    </div>
+                    <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
+                </div>
+                <small class="text-muted">{{ completed_this_month }} this month</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-warning h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-subtitle text-muted mb-1">Overdue / Due Today</h6>
+                        <h2 class="card-text mb-0 text-warning">{{ overdue }}</h2>
+                    </div>
+                    <i class="bi bi-exclamation-triangle fs-2 text-warning opacity-50"></i>
+                </div>
+                <small class="text-muted">{{ due_today }} due today</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-danger h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="card-subtitle text-muted mb-1">High / Critical</h6>
+                        <h2 class="card-text mb-0 text-danger">{{ high + critical }}</h2>
+                    </div>
+                    <i class="bi bi-arrow-up-circle fs-2 text-danger opacity-50"></i>
+                </div>
+                <small class="text-muted">{{ critical }} critical, {{ high }} high</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-clock-history me-1"></i> Recent Job Cards</span>
+                <a href="/jobcards/new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Job Card</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Job #</th>
+                                <th>Title</th>
+                                <th>Customer</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Created</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for jc in recent_jobcards %}
+                            <tr>
+                                <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}" class="fw-medium">{{ jc.job_number }}</a></td>
+                                <td>{{ jc.title[:50] }}{% if jc.title|length > 50 %}...{% endif %}</td>
+                                <td>{{ jc.customer.name if jc.customer else 'N/A' }}</td>
+                                <td>
+                                    {% set status_map = {
+                                        'open': 'primary', 'assigned': 'info', 'in_progress': 'success',
+                                        'on_hold': 'warning', 'awaiting_parts': 'secondary',
+                                        'completed': 'success', 'closed': 'dark', 'cancelled': 'danger'
+                                    } %}
+                                    <span class="badge bg-{{ status_map.get(jc.status.value, 'secondary') }}">
+                                        {{ jc.status.value.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% set pri_map = {'low': 'success', 'medium': 'warning', 'high': 'danger', 'critical': 'danger', 'emergency': 'dark'} %}
+                                    <span class="badge bg-{{ pri_map.get(jc.priority.value, 'secondary') }}">
+                                        {{ jc.priority.value.upper() }}
+                                    </span>
+                                </td>
+                                <td class="text-muted small">{{ jc.created_at.strftime('%Y-%m-%d') if jc.created_at else '' }}</td>
+                                <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="7" class="text-center text-muted py-4">No job cards yet. <a href="/jobcards/new">Create one</a></td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-pie-chart me-1"></i> Status Overview</div>
+            <div class="card-body">
+                {% for label, count, color in status_counts %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="small">{{ label }}</span>
+                    <span class="fw-bold">{{ count }}</span>
+                </div>
+                <div class="progress mb-2" style="height:6px;">
+                    <div class="progress-bar" style="width:{% if total > 0 %}{{ (count / total * 100)|round }}{% else %}0{% endif %}%;background:{{ color }};"></div>
+                </div>
+                {% endfor %}
+                <div class="text-muted small mt-2">Total: {{ total }} job cards</div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-info-circle me-1"></i> Quick Stats</div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Customers</span>
+                    <span class="fw-bold">{{ total_customers }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Technicians</span>
+                    <span class="fw-bold">{{ total_techs }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Created this month</span>
+                    <span class="fw-bold">{{ created_this_month }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Completed this month</span>
+                    <span class="fw-bold">{{ completed_this_month }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

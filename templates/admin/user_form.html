@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if user else 'New' }} User - {{ app_settings.company_name }}{% endblock %}
+{% block page_title %}{{ 'Edit' if user else 'New' }} User{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="bi bi-person-gear me-2"></i>
+                {{ 'Edit' if user else 'Create' }} user account
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label required">Username</label>
+                        <input type="text" name="username" class="form-control" value="{{ user.username if user else '' }}"
+                               {% if user %}disabled{% else %}required autocomplete="off"{% endif %}>
+                        {% if user %}<div class="form-text">Username cannot be changed.</div>{% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" value="{{ user.full_name or '' if user else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label required">Role</label>
+                        <select name="role" class="form-select" required>
+                            {% for role in ['admin', 'technician', 'user'] %}
+                            <option value="{{ role }}" {% if user and user.role == role %}selected{% endif %}>{{ role }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            <strong>admin</strong> = full access incl. settings &amp; users &middot;
+                            <strong>technician</strong> = jobcards, customers, technicians, reports &middot;
+                            <strong>user</strong> = jobcards &amp; customers only
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label {{ 'required' if not user }}">{{ 'New Password (leave blank to keep)' if user else 'Password' }}</label>
+                        <input type="password" name="password" class="form-control" autocomplete="new-password"
+                               {% if not user %}required{% endif %}>
+                        <div class="form-text">At least 6 characters.</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>{{ 'Save Changes' if user else 'Create User' }}
+                    </button>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">Cancel</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

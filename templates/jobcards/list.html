@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block page_title %}Job Cards{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Job Cards{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('jobcards.new_jobcard') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Job Card</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search job # or title..." value="{{ search }}">
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Statuses</option>
+                    {% for s in ['open','assigned','in_progress','on_hold','awaiting_parts','completed','closed','cancelled'] %}
+                    <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s.replace('_',' ').title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="priority" class="form-select form-select-sm">
+                    <option value="">All Priorities</option>
+                    {% for p in ['low','medium','high','critical','emergency'] %}
+                    <option value="{{ p }}" {% if priority_filter == p %}selected{% endif %}>{{ p.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="technician_id" class="form-select form-select-sm">
+                    <option value="">All Technicians</option>
+                    {% for t in technicians %}
+                    <option value="{{ t.id }}" {% if technician_id|string == t.id|string %}selected{% endif %}>{{ t.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-search"></i></button>
+            </div>
+            <div class="col-md-1">
+                <a href="{{ url_for('jobcards.list_jobcards') }}" class="btn btn-sm btn-outline-secondary w-100"><i class="bi bi-x-circle"></i></a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Job #</th>
+                        <th>Title</th>
+                        <th>Customer</th>
+                        <th>Technician</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Created</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for jc in jobcards %}
+                    <tr>
+                        <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}" class="fw-medium">{{ jc.job_number }}</a></td>
+                        <td>{{ jc.title[:60] }}{% if jc.title|length > 60 %}...{% endif %}</td>
+                        <td>{{ jc.customer.name if jc.customer else 'N/A' }}</td>
+                        <td>{{ jc.assigned_technician.name if jc.assigned_technician else '-' }}</td>
+                        <td>
+                            {% set sm = {'open':'primary','assigned':'info','in_progress':'success','on_hold':'warning','awaiting_parts':'secondary','completed':'success','closed':'dark','cancelled':'danger'} %}
+                            <span class="badge bg-{{ sm.get(jc.status.value, 'secondary') }}">{{ jc.status.value.replace('_',' ').title() }}</span>
+                        </td>
+                        <td>
+                            {% set pm = {'low':'success','medium':'warning','high':'danger','critical':'danger','emergency':'dark'} %}
+                            <span class="badge bg-{{ pm.get(jc.priority.value, 'secondary') }}">{{ jc.priority.value.upper() }}</span>
+                        </td>
+                        <td class="small">
+                            {% if jc.due_date %}
+                                {% if jc.due_date < today and jc.status.value not in ['completed','closed','cancelled'] %}
+                                <span class="text-danger fw-bold">{{ jc.due_date.strftime('%Y-%m-%d') }}</span>
+                                {% else %}
+                                {{ jc.due_date.strftime('%Y-%m-%d') }}
+                                {% endif %}
+                            {% else %}-{% endif %}
+                        </td>
+                        <td class="text-muted small">{{ jc.created_at.strftime('%Y-%m-%d') if jc.created_at else '' }}</td>
+                        <td>
+                            <a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="9" class="text-center text-muted py-4">No job cards found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

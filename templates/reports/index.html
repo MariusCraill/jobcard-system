@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block page_title %}Reports{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Reports{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Job Cards</div>
+            <div class="card-body">
+                <form method="GET" action="{{ url_for('reports.export_excel') }}" class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select form-select-sm">
+                            <option value="">All Statuses</option>
+                            {% for s in ['open','assigned','in_progress','on_hold','completed','closed','cancelled'] %}
+                            <option value="{{ s }}">{{ s.replace('_',' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Priority</label>
+                        <select name="priority" class="form-select form-select-sm">
+                            <option value="">All Priorities</option>
+                            {% for p in ['low','medium','high','critical','emergency'] %}
+                            <option value="{{ p }}">{{ p.title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Technician</label>
+                        <select name="technician_id" class="form-select form-select-sm">
+                            <option value="">All Technicians</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">From Date</label>
+                        <input type="date" name="date_from" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">To Date</label>
+                        <input type="date" name="date_to" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-download"></i> Export Excel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-file-text me-1"></i> Quick Reports</div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('reports.export_excel') }}?status=completed" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        Completed Job Cards
+                        <i class="bi bi-download"></i>
+                    </a>
+                    <a href="{{ url_for('reports.export_excel') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        All Job Cards
+                        <i class="bi bi-download"></i>
+                    </a>
+                    <a href="{{ url_for('reports.summary') }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        Summary Statistics
+                        <i class="bi bi-bar-chart"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

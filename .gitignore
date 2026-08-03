@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.env
+.venv/
+venv/
+env/
+jobcards.db
+instance/
+static/uploads/
+.pytest_cache/
+node_modules/
+.DS_Store
+Thumbs.db

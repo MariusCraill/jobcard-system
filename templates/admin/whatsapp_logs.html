@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block page_title %}WhatsApp Logs{% endblock %}
+{% block title %}{{ app_settings.company_name }} - WhatsApp Logs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Number</th><th>Type</th><th>Preview</th><th>Status</th><th>Error</th></tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="small">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '' }}</td>
+                        <td>{{ log.recipient_number }}</td>
+                        <td>{{ log.message_type }}</td>
+                        <td>{{ log.message_preview[:80] }}{% if log.message_preview and log.message_preview|length > 80 %}...{% endif %}</td>
+                        <td><span class="badge bg-{{ 'success' if log.status in ['sent','logged'] else 'warning' if log.status == 'pending' else 'danger' }}">{{ log.status }}</span></td>
+                        <td class="small text-danger">{{ log.error_message or '' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-3">No WhatsApp logs</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block page_title %}Admin Settings{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Admin{% endblock %}
+
+{% block header_actions %}
+<div class="btn-group btn-group-sm">
+    <a href="{{ url_for('admin.email_logs') }}" class="btn btn-outline-info"><i class="bi bi-envelope"></i> Email Logs</a>
+    <a href="{{ url_for('admin.whatsapp_logs') }}" class="btn btn-outline-success"><i class="bi bi-whatsapp"></i> WhatsApp Logs</a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header"><i class="bi bi-gear me-1"></i> System Settings</div>
+    <div class="card-body">
+        <form method="POST">
+            <h5 class="text-primary mb-3"><i class="bi bi-building"></i> Company Information</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">Company Name</label>
+                    <input type="text" name="company_name" class="form-control" value="{{ current.get('company_name', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Company Phone</label>
+                    <input type="text" name="company_phone" class="form-control" value="{{ current.get('company_phone', '') }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Company Email</label>
+                    <input type="email" name="company_email" class="form-control" value="{{ current.get('company_email', '') }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Company Address</label>
+                    <input type="text" name="company_address" class="form-control" value="{{ current.get('company_address', '') }}">
+                </div>
+            </div>
+
+            <h5 class="text-primary mb-3"><i class="bi bi-envelope"></i> Email Settings</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Delivery Method</label>
+                    <select name="email_method" class="form-select">
+                        <option value="smtp" {% if current.get('email_method') == 'smtp' %}selected{% endif %}>SMTP Server</option>
+                        <option value="client" {% if current.get('email_method') == 'client' %}selected{% endif %}>Default Email Client (mailto: link)</option>
+                    </select>
+                    <small class="text-muted">"Client" opens the user's default email app</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From Email</label>
+                    <input type="email" name="smtp_from_email" class="form-control" value="{{ current.get('smtp_from_email', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">SMTP Host</label>
+                    <input type="text" name="smtp_host" class="form-control" value="{{ current.get('smtp_host', '') }}">
+                </div>
+                <div class="col-md-1">
+                    <label class="form-label">Port</label>
+                    <input type="number" name="smtp_port" class="form-control" value="{{ current.get('smtp_port', '587') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">SMTP Username</label>
+                    <input type="text" name="smtp_user" class="form-control" value="{{ current.get('smtp_user', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">SMTP Password</label>
+                    <input type="password" name="smtp_pass" class="form-control" value="{{ current.get('smtp_pass', '') }}">
+                </div>
+            </div>
+
+            <h5 class="text-primary mb-3"><i class="bi bi-whatsapp"></i> WhatsApp Integration</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Enabled</label>
+                    <select name="whatsapp_enabled" class="form-select">
+                        <option value="false" {% if current.get('whatsapp_enabled') == 'false' %}selected{% endif %}>Disabled</option>
+                        <option value="true" {% if current.get('whatsapp_enabled') == 'true' %}selected{% endif %}>Enabled</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Action</label>
+                    <select name="whatsapp_action" class="form-select">
+                        <option value="api" {% if current.get('whatsapp_action') == 'api' %}selected{% endif %}>Send via API</option>
+                        <option value="web" {% if current.get('whatsapp_action') == 'web' %}selected{% endif %}>Open WhatsApp Web (wa.me link)</option>
+                        <option value="app" {% if current.get('whatsapp_action') == 'app' %}selected{% endif %}>Open WhatsApp App (whatsapp:// link)</option>
+                    </select>
+                    <small class="text-muted">"Web" opens wa.me in browser, "App" opens the desktop/mobile app</small>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Provider (API mode only)</label>
+                    <select name="whatsapp_provider" class="form-select">
+                        <option value="log_only" {% if current.get('whatsapp_provider') == 'log_only' %}selected{% endif %}>Log Only (Testing)</option>
+                        <option value="twilio" {% if current.get('whatsapp_provider') == 'twilio' %}selected{% endif %}>Twilio</option>
+                        <option value="wati" {% if current.get('whatsapp_provider') == 'wati' %}selected{% endif %}>WATI</option>
+                        <option value="whatsapp_business_api" {% if current.get('whatsapp_provider') == 'whatsapp_business_api' %}selected{% endif %}>WhatsApp Business API</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">API Key / Token</label>
+                    <input type="password" name="whatsapp_api_key" class="form-control" value="{{ current.get('whatsapp_api_key', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Account ID</label>
+                    <input type="text" name="whatsapp_account_id" class="form-control" value="{{ current.get('whatsapp_account_id', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">From Number</label>
+                    <input type="text" name="whatsapp_from_number" class="form-control" value="{{ current.get('whatsapp_from_number', '') }}" placeholder="+27123456789">
+                </div>
+            </div>
+
+            <h5 class="text-primary mb-3"><i class="bi bi-shield-lock"></i> API Access</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <label class="form-label">API Key (for /api endpoints)</label>
+                    <input type="password" name="api_key" class="form-control" value="{{ current.get('api_key', '') }}" autocomplete="off">
+                    <div class="form-text">Required for external integrations. Send as <code>X-API-Key</code> header.</div>
+                </div>
+            </div>
+
+            <h5 class="text-primary mb-3"><i class="bi bi-gear"></i> Other Settings</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <label class="form-label">Next Job Number</label>
+                    <input type="number" name="next_job_number" class="form-control" value="{{ current.get('next_job_number', '1001') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Default Hourly Rate (R)</label>
+                    <input type="number" name="default_hourly_rate" class="form-control" step="0.01" value="{{ current.get('default_hourly_rate', '350') }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Invoice Prefix</label>
+                    <input type="text" name="invoice_prefix" class="form-control" value="{{ current.get('invoice_prefix', 'INV') }}">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Save Settings</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

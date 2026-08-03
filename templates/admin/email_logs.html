@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block page_title %}Email Logs{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Email Logs{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Recipient</th><th>Subject</th><th>Status</th><th>Error</th></tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td class="small">{{ log.created_at.strftime('%Y-%m-%d %H:%M') if log.created_at else '' }}</td>
+                        <td>{{ log.recipient }}</td>
+                        <td>{{ log.subject }}</td>
+                        <td><span class="badge bg-{{ 'success' if log.status == 'sent' else 'danger' }}">{{ log.status }}</span></td>
+                        <td class="small text-danger">{{ log.error_message or '' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-3">No email logs</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

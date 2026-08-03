@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block page_title %}{{ 'Edit Job Card' if jobcard else 'New Job Card' }}{% endblock %}
+{% block title %}{{ app_settings.company_name }} - {{ 'Edit' if jobcard else 'New' }} Job Card{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('jobcards.edit_jobcard', jobcard_id=jobcard.id) if jobcard else url_for('jobcards.new_jobcard') }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Job Number</label>
+                    <input type="text" class="form-control" value="{{ jobcard.job_number if jobcard else 'Auto-generated' }}" disabled>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <input type="text" class="form-control" value="{{ jobcard.status.value.replace('_',' ').title() if jobcard else 'Open' }}" disabled>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label required">Title</label>
+                    <input type="text" name="title" class="form-control" required value="{{ jobcard.title if jobcard else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label required">Customer</label>
+                    <select name="customer_id" class="form-select" required>
+                        <option value="">Select Customer...</option>
+                        {% for c in customers %}
+                        <option value="{{ c.id }}" {% if jobcard and jobcard.customer_id == c.id %}selected{% endif %}>{{ c.name }} {% if c.company %} ({{ c.company }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Technician</label>
+                    <select name="technician_id" class="form-select">
+                        <option value="">Unassigned</option>
+                        {% for t in technicians %}
+                        <option value="{{ t.id }}" {% if jobcard and jobcard.technician_id == t.id %}selected{% endif %}>{{ t.name }} ({{ t.employee_code }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-select">
+                        {% for p in ['low','medium','high','critical','emergency'] %}
+                        <option value="{{ p }}" {% if (jobcard and jobcard.priority.value == p) or (not jobcard and p == 'medium') %}selected{% endif %}>{{ p.title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Scheduled Date</label>
+                    <input type="date" name="scheduled_date" class="form-control" value="{{ jobcard.scheduled_date.strftime('%Y-%m-%d') if jobcard and jobcard.scheduled_date else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" name="due_date" class="form-control" value="{{ jobcard.due_date.strftime('%Y-%m-%d') if jobcard and jobcard.due_date else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Customer PO</label>
+                    <input type="text" name="customer_po" class="form-control" value="{{ jobcard.customer_po if jobcard else '' }}">
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-6">
+                    <label class="form-label">Site Address</label>
+                    <textarea name="site_address" class="form-control" rows="2">{{ jobcard.site_address if jobcard else '' }}</textarea>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Site Contact</label>
+                    <input type="text" name="site_contact" class="form-control" value="{{ jobcard.site_contact if jobcard else '' }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Site Phone</label>
+                    <input type="text" name="site_phone" class="form-control" value="{{ jobcard.site_phone if jobcard else '' }}">
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="4">{{ jobcard.description if jobcard else '' }}</textarea>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">Estimated Hours</label>
+                    <input type="number" name="estimated_hours" class="form-control" step="0.5" value="{{ jobcard.estimated_hours if jobcard else '0' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Estimated Cost (R)</label>
+                    <input type="number" name="estimated_cost" class="form-control" step="0.01" value="{{ jobcard.estimated_cost if jobcard else '0' }}">
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <label class="form-label">Tasks</label>
+                <div id="tasks-container">
+                    {% if jobcard and tasks %}
+                        {% for t in tasks %}
+                        <div class="input-group mb-2 task-row">
+                            <input type="text" name="task_description[]" class="form-control" placeholder="Task description" value="{{ t.description }}">
+                            <input type="number" name="task_estimated[]" class="form-control" style="max-width:100px;" placeholder="Min" value="{{ t.estimated_minutes }}">
+                            <button type="button" class="btn btn-outline-danger remove-task"><i class="bi bi-x"></i></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    <div class="input-group mb-2 task-row">
+                        <input type="text" name="task_description[]" class="form-control" placeholder="Task description">
+                        <input type="number" name="task_estimated[]" class="form-control" style="max-width:100px;" placeholder="Minutes">
+                        <button type="button" class="btn btn-outline-danger remove-task"><i class="bi bi-x"></i></button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="add-task"><i class="bi bi-plus"></i> Add Task</button>
+            </div>
+
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Customer Notes</label>
+                    <textarea name="customer_notes" class="form-control" rows="3">{{ jobcard.customer_notes if jobcard else '' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Internal Notes</label>
+                    <textarea name="internal_notes" class="form-control" rows="3">{{ jobcard.internal_notes if jobcard else '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> {{ 'Update' if jobcard else 'Create' }} Job Card</button>
+                <a href="{{ url_for('jobcards.list_jobcards') }}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('add-task')?.addEventListener('click', function() {
+        const container = document.getElementById('tasks-container');
+        const row = document.createElement('div');
+        row.className = 'input-group mb-2 task-row';
+        row.innerHTML = '<input type="text" name="task_description[]" class="form-control" placeholder="Task description">' +
+            '<input type="number" name="task_estimated[]" class="form-control" style="max-width:100px;" placeholder="Minutes">' +
+            '<button type="button" class="btn btn-outline-danger remove-task"><i class="bi bi-x"></i></button>';
+        container.appendChild(row);
+    });
+    document.getElementById('tasks-container')?.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-task')) {
+            const rows = this.querySelectorAll('.task-row');
+            if (rows.length > 1) {
+                e.target.closest('.task-row').remove();
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

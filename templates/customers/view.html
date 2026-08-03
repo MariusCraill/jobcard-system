@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block page_title %}{{ customer.name }}{% endblock %}
+{% block title %}{{ app_settings.company_name }} - {{ customer.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person me-1"></i> Customer Details</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td class="text-muted">Name</td><td class="fw-bold">{{ customer.name }}</td></tr>
+                    {% if customer.company %}<tr><td class="text-muted">Company</td><td>{{ customer.company }}</td></tr>{% endif %}
+                    {% if customer.contact_person %}<tr><td class="text-muted">Contact</td><td>{{ customer.contact_person }}</td></tr>{% endif %}
+                    {% if customer.email %}<tr><td class="text-muted">Email</td><td><a href="mailto:{{ customer.email }}">{{ customer.email }}</a></td></tr>{% endif %}
+                    {% if customer.phone %}<tr><td class="text-muted">Phone</td><td>{{ customer.phone }}</td></tr>{% endif %}
+                    {% if customer.alt_phone %}<tr><td class="text-muted">Alt Phone</td><td>{{ customer.alt_phone }}</td></tr>{% endif %}
+                    {% if customer.address %}<tr><td class="text-muted">Address</td><td>{{ customer.address }}</td></tr>{% endif %}
+                    {% if customer.city %}<tr><td class="text-muted">City</td><td>{{ customer.city }}</td></tr>{% endif %}
+                    {% if customer.province %}<tr><td class="text-muted">Province</td><td>{{ customer.province }}</td></tr>{% endif %}
+                    <tr><td class="text-muted">Created</td><td>{{ customer.created_at.strftime('%Y-%m-%d') if customer.created_at else '' }}</td></tr>
+                </table>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('customers.edit_customer', customer_id=customer.id) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+                    <a href="{{ url_for('jobcards.new_jobcard') }}?customer_id={{ customer.id }}" class="btn btn-success btn-sm"><i class="bi bi-plus"></i> New Job Card</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-ticket me-1"></i> Job Cards</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Job #</th><th>Title</th><th>Status</th><th>Priority</th><th>Technician</th><th>Date</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for jc in jobcards %}
+                        <tr>
+                            <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}">{{ jc.job_number }}</a></td>
+                            <td>{{ jc.title[:50] }}</td>
+                            <td><span class="badge bg-{{ {'open':'primary','assigned':'info','in_progress':'success','completed':'success','closed':'dark','cancelled':'danger'}.get(jc.status.value,'secondary') }}">{{ jc.status.value.replace('_',' ').title() }}</span></td>
+                            <td><span class="badge bg-{{ {'low':'success','medium':'warning','high':'danger','critical':'danger','emergency':'dark'}.get(jc.priority.value,'secondary') }}">{{ jc.priority.value.upper() }}</span></td>
+                            <td>{{ jc.assigned_technician.name if jc.assigned_technician else '-' }}</td>
+                            <td class="small">{{ jc.created_at.strftime('%Y-%m-%d') if jc.created_at else '' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">No job cards for this customer</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

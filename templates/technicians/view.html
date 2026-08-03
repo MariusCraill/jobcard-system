@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block page_title %}{{ tech.name }}{% endblock %}
+{% block title %}{{ app_settings.company_name }} - {{ tech.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-person me-1"></i> Technician Details</div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr><td class="text-muted">Code</td><td class="fw-bold">{{ tech.employee_code }}</td></tr>
+                    <tr><td class="text-muted">Name</td><td>{{ tech.name }}</td></tr>
+                    <tr><td class="text-muted">Role</td><td>{{ tech.role }}</td></tr>
+                    {% if tech.email %}<tr><td class="text-muted">Email</td><td><a href="mailto:{{ tech.email }}">{{ tech.email }}</a></td></tr>{% endif %}
+                    {% if tech.phone %}<tr><td class="text-muted">Phone</td><td>{{ tech.phone }}</td></tr>{% endif %}
+                    {% if tech.mobile %}<tr><td class="text-muted">Mobile</td><td>{{ tech.mobile }}</td></tr>{% endif %}
+                    {% if tech.whatsapp %}<tr><td class="text-muted">WhatsApp</td><td>{{ tech.whatsapp }}</td></tr>{% endif %}
+                    {% if tech.specialties %}<tr><td class="text-muted">Specialties</td><td>{{ tech.specialties }}</td></tr>{% endif %}
+                    <tr><td class="text-muted">Hourly Rate</td><td>R{{ tech.hourly_rate }}</td></tr>
+                    <tr><td class="text-muted">Max Jobs</td><td>{{ tech.max_jobcards }}</td></tr>
+                </table>
+                <a href="{{ url_for('technicians.edit_technician', tech_id=tech.id) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil"></i> Edit</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-ticket me-1"></i> Assigned Job Cards</div>
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr><th>Job #</th><th>Title</th><th>Customer</th><th>Status</th><th>Priority</th><th>Due</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for jc in jobcards %}
+                        <tr>
+                            <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}">{{ jc.job_number }}</a></td>
+                            <td>{{ jc.title[:50] }}</td>
+                            <td>{{ jc.customer.name if jc.customer else '-' }}</td>
+                            <td><span class="badge bg-{{ {'open':'primary','assigned':'info','in_progress':'success','completed':'success','closed':'dark'}.get(jc.status.value,'secondary') }}">{{ jc.status.value.replace('_',' ').title() }}</span></td>
+                            <td><span class="badge bg-{{ {'low':'success','medium':'warning','high':'danger','critical':'danger'}.get(jc.priority.value,'secondary') }}">{{ jc.priority.value.upper() }}</span></td>
+                            <td class="small">{{ jc.due_date.strftime('%Y-%m-%d') if jc.due_date else '-' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">No job cards assigned</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
