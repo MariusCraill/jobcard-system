@@ -140,9 +140,21 @@ td {{ padding: 5px; border-bottom: 1px solid #eee; font-size: 12px; }}
     if jobcard.customer_notes:
         html += f'<div class="section"><h3>Customer Notes</h3><div class="notes-box">{jobcard.customer_notes}</div></div>'
 
+    customer_sig = '<div class="signature-line">Customer Signature & Date</div>'
+    if jobcard.signed_off and jobcard.signature_data:
+        sig_when = jobcard.signed_off_at.strftime("%Y-%m-%d %H:%M") if jobcard.signed_off_at else ""
+        customer_sig = (
+            '<div style="text-align:center;">'
+            f'<img src="{jobcard.signature_data}" '
+            'style="max-height:70px;max-width:220px;background:#fff;border:1px solid #ddd;padding:4px;border-radius:4px;">'
+            f'<div style="font-size:11px;">{jobcard.signed_off_by or "Customer"}</div>'
+            f'<div style="font-size:10px;color:#666;">{sig_when}</div>'
+            '</div>'
+        )
+
     html += f"""<div class="signature-box">
   <div class="signature-line">Technician Signature & Date</div>
-  <div class="signature-line">Customer Signature & Date</div>
+  {customer_sig}
 </div>
 
 <div class="footer">

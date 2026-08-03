@@ -247,3 +247,20 @@ input[type="file"]::file-selector-button {
         -webkit-overflow-scrolling: touch;
     }
 }
+
+.signature-pad canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    touch-action: none;
+    cursor: crosshair;
+}
+
+.signature-img {
+    max-height: 110px;
+    max-width: 100%;
+    background: #fff;
+    border: 1px solid #2c3034;
+    border-radius: 6px;
+    padding: 6px;
+}

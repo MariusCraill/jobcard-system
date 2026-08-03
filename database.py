@@ -50,3 +50,21 @@ def init_db():
         EmailLog, WhatsAppLog, Setting, User
     )
     Base.metadata.create_all(bind=engine)
+    _ensure_columns()
+
+
+def _ensure_columns():
+    """Add columns introduced after a table was first created (create_all does
+    not alter existing tables)."""
+    from sqlalchemy import inspect, text
+    try:
+        insp = inspect(engine)
+    except Exception:
+        return
+    existing = {c["name"] for c in insp.get_columns("jobcards")} if "jobcards" in insp.get_table_names() else set()
+    if "signature_data" not in existing:
+        try:
+            db_session.execute(text("ALTER TABLE jobcards ADD COLUMN signature_data TEXT"))
+            db_session.commit()
+        except Exception:
+            db_session.rollback()

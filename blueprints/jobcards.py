@@ -496,6 +496,13 @@ def sign_off(jobcard_id):
     jc = get_or_404(JobCard, jobcard_id)
     jc.signed_off = True
     jc.signed_off_by = request.form.get("signed_off_by", "")
+    signature = request.form.get("signature", "").strip()
+    if signature:
+        if signature.startswith("data:image/png;base64,"):
+            jc.signature_data = signature
+        else:
+            flash("Invalid signature data", "danger")
+            return redirect(url_for("jobcards.view_jobcard", jobcard_id=jc.id))
     jc.signed_off_at = datetime.utcnow()
     jc.updated_at = datetime.utcnow()
     db_session.commit()

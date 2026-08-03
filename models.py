@@ -115,6 +115,7 @@ class JobCard(Base):
     signed_off = Column(Boolean, default=False)
     signed_off_by = Column(String(150))
     signed_off_at = Column(DateTime)
+    signature_data = Column(Text)
 
     internal_notes = Column(Text)
     customer_notes = Column(Text)

@@ -303,11 +303,23 @@
 
         {% if not jc.signed_off and jc.status.value in ['completed','closed'] %}
         <div class="card mb-3 border-success">
-            <div class="card-header"><i class="bi bi-pen me-1"></i> Sign Off</div>
+            <div class="card-header"><i class="bi bi-pen me-1"></i> Client Sign Off</div>
             <div class="card-body">
-                <form method="POST" action="{{ url_for('jobcards.sign_off', jobcard_id=jc.id) }}">
+                <form method="POST" action="{{ url_for('jobcards.sign_off', jobcard_id=jc.id) }}" id="signOffForm">
                     <div class="mb-2">
-                        <input type="text" name="signed_off_by" class="form-control form-control-sm" placeholder="Name" required>
+                        <label class="form-label required">Client Name</label>
+                        <input type="text" name="signed_off_by" class="form-control form-control-sm" placeholder="Client name" required>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Signature</label>
+                        <div class="signature-pad border rounded" style="background:#fff;">
+                            <canvas id="sigCanvas" width="600" height="200"></canvas>
+                        </div>
+                        <input type="hidden" name="signature" id="sigData">
+                        <small class="text-muted d-block mt-1">Sign with mouse or finger inside the box</small>
+                    </div>
+                    <div class="d-flex gap-2 mb-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="sigClear"><i class="bi bi-eraser me-1"></i>Clear</button>
                     </div>
                     <button type="submit" class="btn btn-success btn-sm w-100"><i class="bi bi-check-lg"></i> Sign Off</button>
                 </form>
@@ -317,9 +329,14 @@
 
         {% if jc.signed_off %}
         <div class="card mb-3 border-success">
-            <div class="card-body text-center text-success">
-                <i class="bi bi-check-circle-fill fs-3"></i>
-                <p class="mb-0">Signed off by {{ jc.signed_off_by }}<br><small class="text-muted">{{ jc.signed_off_at.strftime('%Y-%m-%d %H:%M') if jc.signed_off_at else '' }}</small></p>
+            <div class="card-header"><i class="bi bi-pen me-1"></i> Client Sign Off</div>
+            <div class="card-body text-center">
+                {% if jc.signature_data %}
+                <img src="{{ jc.signature_data }}" alt="Client signature" class="signature-img mb-2">
+                {% else %}
+                <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                {% endif %}
+                <p class="mb-0">Signed off by <span class="fw-bold">{{ jc.signed_off_by }}</span><br><small class="text-muted">{{ jc.signed_off_at.strftime('%Y-%m-%d %H:%M') if jc.signed_off_at else '' }}</small></p>
             </div>
         </div>
         {% endif %}
@@ -612,6 +629,75 @@ document.addEventListener('DOMContentLoaded', function() {
         numberInput.addEventListener('input', updateWALink);
         msgInput.addEventListener('input', updateWALink);
         waModal.addEventListener('shown.bs.modal', updateWALink);
+    }
+
+    // Signature pad
+    const sigCanvas = document.getElementById('sigCanvas');
+    if (sigCanvas) {
+        const ctx = sigCanvas.getContext('2d');
+        const sigForm = document.getElementById('signOffForm');
+        const sigData = document.getElementById('sigData');
+        const sigClear = document.getElementById('sigClear');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, sigCanvas.width, sigCanvas.height);
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#000';
+        let drawing = false;
+        let hasInk = false;
+
+        function getPos(e) {
+            const rect = sigCanvas.getBoundingClientRect();
+            const p = e.touches && e.touches[0] ? e.touches[0] : e;
+            return {
+                x: (p.clientX - rect.left) * (sigCanvas.width / rect.width),
+                y: (p.clientY - rect.top) * (sigCanvas.height / rect.height)
+            };
+        }
+
+        sigCanvas.addEventListener('pointerdown', function (e) {
+            e.preventDefault();
+            sigCanvas.setPointerCapture(e.pointerId);
+            drawing = true;
+            const pos = getPos(e);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+        });
+        sigCanvas.addEventListener('pointermove', function (e) {
+            if (!drawing) return;
+            e.preventDefault();
+            const pos = getPos(e);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.stroke();
+            hasInk = true;
+        });
+        sigCanvas.addEventListener('pointerup', function (e) {
+            drawing = false;
+        });
+        sigCanvas.addEventListener('pointercancel', function () {
+            drawing = false;
+        });
+        sigCanvas.addEventListener('touchstart', function (e) {
+            if (e.cancelable) e.preventDefault();
+        }, { passive: false });
+
+        sigClear.addEventListener('click', function () {
+            ctx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, sigCanvas.width, sigCanvas.height);
+            hasInk = false;
+            sigData.value = '';
+        });
+
+        sigForm.addEventListener('submit', function (e) {
+            if (!hasInk) {
+                e.preventDefault();
+                alert('Please draw a signature in the box before signing off.');
+                return;
+            }
+            sigData.value = sigCanvas.toDataURL('image/png');
+        });
     }
 });
 </script>
