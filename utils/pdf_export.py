@@ -3,7 +3,10 @@ from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from database import db_session
-from models import Customer, Technician, JobCard, JobCardTask, PartUsed, TimeEntry, Setting
+from models import (
+    Customer, Technician, JobCard, JobCardStatus, Priority,
+    JobCardTask, PartUsed, TimeEntry, Setting,
+)
 
 
 def _get_company():
@@ -24,8 +27,8 @@ def generate_jobcard_print_html(jobcard):
     tasks = db_session.query(JobCardTask).filter(JobCardTask.jobcard_id == jobcard.id).order_by(JobCardTask.sort_order).all()
     parts = db_session.query(PartUsed).filter(PartUsed.jobcard_id == jobcard.id).all()
     times = db_session.query(TimeEntry).filter(TimeEntry.jobcard_id == jobcard.id).all()
-    customer = db_session.query(Customer).get(jobcard.customer_id)
-    tech = db_session.query(Technician).get(jobcard.technician_id) if jobcard.technician_id else None
+    customer = db_session.get(Customer, jobcard.customer_id)
+    tech = db_session.get(Technician, jobcard.technician_id) if jobcard.technician_id else None
 
     html = f"""<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
@@ -204,8 +207,8 @@ def generate_jobcard_excel_export(status_filter=None, priority_filter=None, tech
     jobcards = query.order_by(JobCard.created_at.desc()).all()
 
     for row, jc in enumerate(jobcards, 2):
-        customer = db_session.query(Customer).get(jc.customer_id)
-        tech = db_session.query(Technician).get(jc.technician_id) if jc.technician_id else None
+        customer = db_session.get(Customer, jc.customer_id)
+        tech = db_session.get(Technician, jc.technician_id) if jc.technician_id else None
         data = [
             jc.job_number, jc.title,
             customer.name if customer else '',
