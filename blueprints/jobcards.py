@@ -86,15 +86,22 @@ def list_jobcards():
             JobCard.description.ilike(f"%{search}%")
         )
     if status_filter:
-        try:
-            query = query.filter(JobCard.status == JobCardStatus[status_filter])
-        except KeyError:
-            pass
+        if status_filter in ("overdue", "due_today"):
+            active = JobCard.status.notin_([JobCardStatus.completed, JobCardStatus.closed, JobCardStatus.cancelled])
+            if status_filter == "overdue":
+                query = query.filter(JobCard.due_date < today, active)
+            else:
+                query = query.filter(JobCard.due_date == today, active)
+        else:
+            try:
+                query = query.filter(JobCard.status == JobCardStatus[status_filter])
+            except KeyError:
+                pass
     if priority_filter:
-        try:
-            query = query.filter(JobCard.priority == Priority[priority_filter])
-        except KeyError:
-            pass
+        priorities = [p.strip() for p in priority_filter.split(",") if p.strip()]
+        valid = [Priority[p] for p in priorities if p in Priority.__members__]
+        if valid:
+            query = query.filter(JobCard.priority.in_(valid))
     if technician_id:
         query = query.filter(JobCard.technician_id == int(technician_id))
 
@@ -449,7 +456,7 @@ def add_comment(jobcard_id):
 def upload_attachment(jobcard_id):
     jc = get_or_404(JobCard, jobcard_id)
     os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    file = request.files.get("file")
+    file = request.files.get("file") or request.files.get("camera_file")
     if file and file.filename and _allowed_file(file.filename):
         filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
         filepath = os.path.join(UPLOAD_FOLDER, filename)

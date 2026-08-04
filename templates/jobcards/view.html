@@ -233,11 +233,19 @@
                     {% endfor %}
                 </div>
                 <form method="POST" action="{{ url_for('jobcards.upload_attachment', jobcard_id=jc.id) }}" enctype="multipart/form-data" class="mt-3">
-                    <div class="input-group input-group-sm">
-                        <input type="file" name="file" class="form-control form-control-sm">
-                        <input type="hidden" name="uploaded_by" value="System">
-                        <button class="btn btn-outline-primary btn-sm"><i class="bi bi-upload"></i> Upload</button>
+                    <div class="row g-2">
+                        <div class="col">
+                            <div class="input-group input-group-sm">
+                                <input type="file" name="file" id="attachFileInput" class="form-control form-control-sm" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+                                <button class="btn btn-outline-primary btn-sm"><i class="bi bi-upload"></i> Upload</button>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <input type="file" name="camera_file" accept="image/*" capture="environment" class="d-none" id="cameraInput">
+                            <button type="button" class="btn btn-outline-success btn-sm w-100" id="cameraBtn"><i class="bi bi-camera me-1"></i>Take Photo</button>
+                        </div>
                     </div>
+                    <input type="hidden" name="uploaded_by" value="System">
                 </form>
             </div>
         </div>
@@ -629,6 +637,21 @@ document.addEventListener('DOMContentLoaded', function() {
         numberInput.addEventListener('input', updateWALink);
         msgInput.addEventListener('input', updateWALink);
         waModal.addEventListener('shown.bs.modal', updateWALink);
+    }
+
+    // Camera capture
+    const cameraBtn = document.getElementById('cameraBtn');
+    const cameraInput = document.getElementById('cameraInput');
+    if (cameraBtn && cameraInput) {
+        cameraBtn.addEventListener('click', function () {
+            cameraInput.value = '';
+            cameraInput.click();
+        });
+        cameraInput.addEventListener('change', function () {
+            if (cameraInput.files && cameraInput.files.length) {
+                cameraInput.form.submit();
+            }
+        });
     }
 
     // Signature pad

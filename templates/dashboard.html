@@ -5,60 +5,52 @@
 {% block content %}
 <div class="row g-3 mb-4">
     <div class="col-md-3">
-        <div class="card border-primary h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="card-subtitle text-muted mb-1">Open / In Progress</h6>
-                        <h2 class="card-text mb-0 text-primary">{{ open_count + in_progress }}</h2>
-                    </div>
-                    <i class="bi bi-ticket fs-2 text-primary opacity-50"></i>
+        <a href="/jobcards" class="card card-body border-primary h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Open / In Progress</h6>
+                    <h2 class="card-text mb-0 text-primary">{{ open_count + in_progress }}</h2>
                 </div>
-                <small class="text-muted">{{ open_count }} open, {{ in_progress }} in progress</small>
+                <i class="bi bi-ticket fs-2 text-primary opacity-50"></i>
             </div>
-        </div>
+            <small class="text-muted">{{ open_count }} open, {{ in_progress }} in progress</small>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card border-success h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="card-subtitle text-muted mb-1">Completed</h6>
-                        <h2 class="card-text mb-0 text-success">{{ completed }}</h2>
-                    </div>
-                    <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
+        <a href="/jobcards?status=completed" class="card card-body border-success h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Completed</h6>
+                    <h2 class="card-text mb-0 text-success">{{ completed }}</h2>
                 </div>
-                <small class="text-muted">{{ completed_this_month }} this month</small>
+                <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
             </div>
-        </div>
+            <small class="text-muted">{{ completed_this_month }} this month</small>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card border-warning h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="card-subtitle text-muted mb-1">Overdue / Due Today</h6>
-                        <h2 class="card-text mb-0 text-warning">{{ overdue }}</h2>
-                    </div>
-                    <i class="bi bi-exclamation-triangle fs-2 text-warning opacity-50"></i>
+        <a href="/jobcards?status=overdue" class="card card-body border-warning h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Overdue / Due Today</h6>
+                    <h2 class="card-text mb-0 text-warning">{{ overdue }}</h2>
                 </div>
-                <small class="text-muted">{{ due_today }} due today</small>
+                <i class="bi bi-exclamation-triangle fs-2 text-warning opacity-50"></i>
             </div>
-        </div>
+            <small class="text-muted">{{ due_today }} due today</small>
+        </a>
     </div>
     <div class="col-md-3">
-        <div class="card border-danger h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="card-subtitle text-muted mb-1">High / Critical</h6>
-                        <h2 class="card-text mb-0 text-danger">{{ high + critical }}</h2>
-                    </div>
-                    <i class="bi bi-arrow-up-circle fs-2 text-danger opacity-50"></i>
+        <a href="/jobcards?priority=high,critical" class="card card-body border-danger h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">High / Critical</h6>
+                    <h2 class="card-text mb-0 text-danger">{{ high + critical }}</h2>
                 </div>
-                <small class="text-muted">{{ critical }} critical, {{ high }} high</small>
+                <i class="bi bi-arrow-up-circle fs-2 text-danger opacity-50"></i>
             </div>
-        </div>
+            <small class="text-muted">{{ critical }} critical, {{ high }} high</small>
+        </a>
     </div>
 </div>
 
@@ -85,7 +77,7 @@
                         </thead>
                         <tbody>
                             {% for jc in recent_jobcards %}
-                            <tr>
+                            <tr data-href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}">
                                 <td><a href="{{ url_for('jobcards.view_jobcard', jobcard_id=jc.id) }}" class="fw-medium">{{ jc.job_number }}</a></td>
                                 <td>{{ jc.title[:50] }}{% if jc.title|length > 50 %}...{% endif %}</td>
                                 <td>{{ jc.customer.name if jc.customer else 'N/A' }}</td>
@@ -121,14 +113,16 @@
         <div class="card mb-3">
             <div class="card-header"><i class="bi bi-pie-chart me-1"></i> Status Overview</div>
             <div class="card-body">
-                {% for label, count, color in status_counts %}
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="small">{{ label }}</span>
-                    <span class="fw-bold">{{ count }}</span>
-                </div>
-                <div class="progress mb-2" style="height:6px;">
-                    <div class="progress-bar" style="width:{% if total > 0 %}{{ (count / total * 100)|round }}{% else %}0{% endif %}%;background:{{ color }};"></div>
-                </div>
+                {% for label, count, color, status_val in status_counts %}
+                <a href="/jobcards?status={{ status_val }}" class="d-block text-decoration-none">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small text-light-emphasis">{{ label }}</span>
+                        <span class="fw-bold">{{ count }}</span>
+                    </div>
+                    <div class="progress mb-2" style="height:6px;">
+                        <div class="progress-bar" style="width:{% if total > 0 %}{{ (count / total * 100)|round }}{% else %}0{% endif %}%;background:{{ color }};"></div>
+                    </div>
+                </a>
                 {% endfor %}
                 <div class="text-muted small mt-2">Total: {{ total }} job cards</div>
             </div>
@@ -138,11 +132,11 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
                     <span>Customers</span>
-                    <span class="fw-bold">{{ total_customers }}</span>
+                    <a href="/customers" class="fw-bold text-decoration-none">{{ total_customers }}</a>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Technicians</span>
-                    <span class="fw-bold">{{ total_techs }}</span>
+                    <a href="/technicians" class="fw-bold text-decoration-none">{{ total_techs }}</a>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
                     <span>Created this month</span>

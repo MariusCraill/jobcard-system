@@ -109,4 +109,12 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     });
+
+    // Clickable table rows (navigate on row click, unless an inner link/button is used)
+    document.querySelectorAll('tr[data-href]').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form, input')) return;
+            window.location.href = row.dataset.href;
+        });
+    });
 });

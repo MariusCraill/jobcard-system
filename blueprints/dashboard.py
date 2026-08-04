@@ -49,12 +49,12 @@ def index():
     recent_jobcards = db_session.query(JobCard).order_by(JobCard.created_at.desc()).limit(10).all()
 
     status_counts = [
-        ("Open", open_count, "#1565c0"),
-        ("In Progress", in_progress, "#2e7d32"),
-        ("On Hold", on_hold, "#f9a825"),
-        ("Completed", completed, "#1b5e20"),
-        ("Closed", closed, "#6a1b9a"),
-        ("Cancelled", cancelled, "#bf360c"),
+        ("Open", open_count, "#1565c0", "open"),
+        ("In Progress", in_progress, "#2e7d32", "in_progress"),
+        ("On Hold", on_hold, "#f9a825", "on_hold"),
+        ("Completed", completed, "#1b5e20", "completed"),
+        ("Closed", closed, "#6a1b9a", "closed"),
+        ("Cancelled", cancelled, "#bf360c", "cancelled"),
     ]
 
     return render_template("dashboard.html", **locals())

@@ -264,3 +264,22 @@ input[type="file"]::file-selector-button {
     border-radius: 6px;
     padding: 6px;
 }
+
+.card-click {
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-click:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.card-click h6,
+.card-click .text-muted {
+    color: #adb5bd !important;
+}
+
+tr[data-href] {
+    cursor: pointer;
+}
