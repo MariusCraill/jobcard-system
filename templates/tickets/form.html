@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block page_title %}Edit {{ ticket.ticket_number }}{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Edit {{ ticket.ticket_number }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-pencil me-1"></i> Edit Ticket {{ ticket.ticket_number }}</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('tickets.edit_ticket', ticket_id=ticket.id) }}">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label required">Client Name</label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ ticket.customer_name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company</label>
+                            <input type="text" name="company" class="form-control" value="{{ ticket.company or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ ticket.email or '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ ticket.phone or '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label required">Subject</label>
+                            <input type="text" name="subject" class="form-control" value="{{ ticket.subject }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description</label>
+                            <textarea name="description" class="form-control" rows="4">{{ ticket.description or '' }}</textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Priority</label>
+                            <select name="priority" class="form-select">
+                                {% for p in ['low','medium','high','critical','emergency'] %}
+                                <option value="{{ p }}" {% if ticket.priority.value == p %}selected{% endif %}>{{ p.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Assigned To</label>
+                            <input type="text" name="assigned_to" class="form-control" value="{{ ticket.assigned_to or '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Source</label>
+                            <input type="text" name="source" class="form-control" value="{{ ticket.source }}" disabled>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Internal Notes</label>
+                            <textarea name="internal_notes" class="form-control" rows="2" placeholder="Visible only to staff">{{ ticket.internal_notes or '' }}</textarea>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Save Ticket</button>
+                        <a href="{{ url_for('tickets.view_ticket', ticket_id=ticket.id) }}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block page_title %}{{ ticket.ticket_number }}{% endblock %}
+{% block title %}{{ app_settings.company_name }} - {{ ticket.ticket_number }}{% endblock %}
+{% block header_actions %}
+<a href="{{ url_for('tickets.edit_ticket', ticket_id=ticket.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil me-1"></i>Edit</a>
+{% if ticket.jobcard %}
+<a href="{{ url_for('jobcards.view_jobcard', jobcard_id=ticket.jobcard.id) }}" class="btn btn-sm btn-success"><i class="bi bi-ticket me-1"></i>{{ ticket.jobcard.job_number }}</a>
+{% else %}
+<form method="POST" action="{{ url_for('tickets.convert_to_jobcard', ticket_id=ticket.id) }}" class="d-inline" onsubmit="return confirm('Convert this ticket into a job card?');">
+    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-arrow-left-right me-1"></i>Convert to Job Card</button>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-life-preserver me-1"></i> Ticket {{ ticket.ticket_number }}</span>
+        <div>
+            <span class="badge bg-{{ {'open':'primary','in_progress':'info','resolved':'success','closed':'dark','cancelled':'danger'}.get(ticket.status.value,'secondary') }}">{{ ticket.status.value.replace('_',' ').title() }}</span>
+            <span class="badge bg-{{ {'low':'success','medium':'warning','high':'danger','critical':'danger','emergency':'dark'}.get(ticket.priority.value,'secondary') }}">{{ ticket.priority.value.upper() }}</span>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="text-muted small text-uppercase">Client</div>
+                <div class="fw-bold">{{ ticket.customer_name }}{% if ticket.company %} - {{ ticket.company }}{% endif %}</div>
+                {% if ticket.email %}<div><i class="bi bi-envelope me-1"></i><a href="mailto:{{ ticket.email }}">{{ ticket.email }}</a></div>{% endif %}
+                {% if ticket.phone %}<div><i class="bi bi-telephone me-1"></i>{{ ticket.phone }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+                <div class="text-muted small text-uppercase">Details</div>
+                <div>Source: <span class="text-capitalize">{{ ticket.source }}</span></div>
+                <div>Logged: {{ ticket.created_at.strftime('%Y-%m-%d %H:%M') if ticket.created_at else '' }}</div>
+                <div>Updated: {{ ticket.updated_at.strftime('%Y-%m-%d %H:%M') if ticket.updated_at else '' }}</div>
+                {% if ticket.resolved_at %}<div>Resolved: {{ ticket.resolved_at.strftime('%Y-%m-%d %H:%M') }}</div>{% endif %}
+                {% if ticket.assigned_to %}<div>Assigned to: <span class="fw-bold">{{ ticket.assigned_to }}</span></div>{% endif %}
+            </div>
+        </div>
+        <hr>
+        <h5 class="mb-2">{{ ticket.subject }}</h5>
+        {% if ticket.description %}
+        <div style="white-space: pre-line;">{{ ticket.description }}</div>
+        {% else %}
+        <p class="text-muted mb-0">No description provided</p>
+        {% endif %}
+        {% if ticket.internal_notes %}
+        <div class="mt-3 p-3 rounded border border-warning">
+            <div class="small text-muted mb-1"><i class="bi bi-sticky me-1"></i>Internal Notes</div>
+            <div style="white-space: pre-line;">{{ ticket.internal_notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-5">
+        <div class="card mb-3">
+            <div class="card-header"><i class="bi bi-arrow-repeat me-1"></i> Change Status</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('tickets.update_ticket_status', ticket_id=ticket.id) }}">
+                    <div class="mb-2">
+                        <select name="status" class="form-select form-select-sm">
+                            {% for s in ['open','in_progress','resolved','closed','cancelled'] %}
+                            <option value="{{ s }}" {% if ticket.status.value == s %}selected{% endif %}>{{ s.replace('_',' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-outline-primary btn-sm w-100">Update Status</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header"><i class="bi bi-chat-dots me-1"></i> Add Update</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('tickets.add_ticket_comment', ticket_id=ticket.id) }}">
+                    <div class="mb-2">
+                        <label class="form-label">Author</label>
+                        <input type="text" name="author" class="form-control form-control-sm" value="{{ current_user.full_name or current_user.username }}">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Comment</label>
+                        <textarea name="body" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input type="checkbox" name="is_internal" class="form-check-input" id="ticketInternalCheck">
+                        <label class="form-check-label" for="ticketInternalCheck">Internal only (not visible to client)</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i> Add Comment</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-chat-left-text me-1"></i> Comments &amp; Updates</div>
+            <div class="card-body">
+                {% for c in comments %}
+                <div class="border rounded p-2 mb-2 {% if c.is_internal %}border-warning bg-warning bg-opacity-10{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center small">
+                        <strong>{{ c.author }}{% if c.is_internal %} <span class="badge bg-warning text-dark">Internal</span>{% endif %}</strong>
+                        <span class="text-muted">{{ c.created_at.strftime('%Y-%m-%d %H:%M') if c.created_at else '' }}</span>
+                    </div>
+                    <div class="mt-1 small" style="white-space: pre-line;">{{ c.body }}</div>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">No comments yet</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <form method="POST" action="{{ url_for('tickets.delete_ticket', ticket_id=ticket.id) }}" class="d-inline" onsubmit="return confirm('Delete ticket {{ ticket.ticket_number }}?');">
+        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash me-1"></i>Delete Ticket</button>
+    </form>
+</div>
+{% endblock %}

@@ -29,6 +29,7 @@ def seed():
         "company_phone": "+27 11 555 0100",
         "company_email": "info@jobcardpro.co.za",
         "next_job_number": "1008",
+        "next_ticket_number": "1001",
         "default_hourly_rate": "350",
         "whatsapp_enabled": "false",
         "whatsapp_provider": "log_only",

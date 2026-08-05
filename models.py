@@ -35,6 +35,14 @@ class TaskStatus(enum.Enum):
     completed = "completed"
 
 
+class TicketStatus(enum.Enum):
+    open = "open"
+    in_progress = "in_progress"
+    resolved = "resolved"
+    closed = "closed"
+    cancelled = "cancelled"
+
+
 class Customer(Base):
     __tablename__ = "customers"
 
@@ -133,6 +141,7 @@ class JobCard(Base):
     comments = relationship("Comment", back_populates="jobcard", cascade="all, delete-orphan")
     attachments = relationship("Attachment", back_populates="jobcard", cascade="all, delete-orphan")
     status_history = relationship("StatusHistory", back_populates="jobcard", cascade="all, delete-orphan")
+    ticket = relationship("Ticket", back_populates="jobcard", uselist=False)
 
 
 class JobCardTask(Base):
@@ -230,9 +239,46 @@ class StatusHistory(Base):
     jobcard = relationship("JobCard", back_populates="status_history")
 
 
+class Ticket(Base):
+    __tablename__ = "tickets"
+
+    id = Column(Integer, primary_key=True)
+    ticket_number = Column(String(30), nullable=False, unique=True)
+    customer_name = Column(String(200), nullable=False)
+    company = Column(String(200))
+    email = Column(String(200))
+    phone = Column(String(50))
+    subject = Column(String(300), nullable=False)
+    description = Column(Text)
+    priority = Column(SAEnum(Priority), default=Priority.medium)
+    status = Column(SAEnum(TicketStatus), default=TicketStatus.open)
+    source = Column(String(30), default="web")
+    assigned_to = Column(String(150))
+    internal_notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    resolved_at = Column(DateTime)
+    jobcard_id = Column(Integer, ForeignKey("jobcards.id"))
+
+    jobcard = relationship("JobCard", back_populates="ticket")
+    comments = relationship("TicketComment", back_populates="ticket", cascade="all, delete-orphan")
+
+
+class TicketComment(Base):
+    __tablename__ = "ticket_comments"
+
+    id = Column(Integer, primary_key=True)
+    ticket_id = Column(Integer, ForeignKey("tickets.id", ondelete="CASCADE"), nullable=False)
+    author = Column(String(150), nullable=False)
+    body = Column(Text, nullable=False)
+    is_internal = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    ticket = relationship("Ticket", back_populates="comments")
+
+
 class EmailLog(Base):
     __tablename__ = "email_logs"
-
     id = Column(Integer, primary_key=True)
     jobcard_id = Column(Integer, ForeignKey("jobcards.id"))
     recipient = Column(String(200), nullable=False)

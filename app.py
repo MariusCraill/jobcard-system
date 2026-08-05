@@ -9,8 +9,8 @@ login_manager = LoginManager()
 
 # Which blueprint prefixes each role may access (admin = everything).
 ROLE_ALLOWED_PREFIXES = {
-    "technician": ("dashboard.", "jobcards.", "customers.", "technicians.", "reports."),
-    "user": ("dashboard.", "jobcards.", "customers."),
+    "technician": ("dashboard.", "jobcards.", "customers.", "technicians.", "reports.", "tickets."),
+    "user": ("dashboard.", "jobcards.", "customers.", "tickets."),
 }
 
 
@@ -56,6 +56,8 @@ def create_app():
             return
         if request.endpoint.startswith("api."):
             return  # the api blueprint handles its own auth (session or API key)
+        if request.endpoint in ("tickets.new_ticket", "tickets.ticket_lookup"):
+            return  # client-facing ticket pages
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login", next=request.path))
         allowed = ROLE_ALLOWED_PREFIXES.get(current_user.role)
@@ -83,6 +85,7 @@ def create_app():
     from blueprints.admin import admin_bp
     from blueprints.api import api_bp
     from blueprints.auth import auth_bp
+    from blueprints.tickets import tickets_bp
 
     app.register_blueprint(auth_bp, url_prefix="/auth")
     app.register_blueprint(dashboard_bp)
@@ -92,6 +95,7 @@ def create_app():
     app.register_blueprint(reports_bp, url_prefix="/reports")
     app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(api_bp, url_prefix="/api")
+    app.register_blueprint(tickets_bp, url_prefix="/tickets")
 
     init_db()
     ensure_admin()

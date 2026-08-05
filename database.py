@@ -47,7 +47,7 @@ def init_db():
     from models import (
         Customer, Technician, JobCard, JobCardTask, PartUsed,
         TimeEntry, Comment, Attachment, StatusHistory,
-        EmailLog, WhatsAppLog, Setting, User
+        EmailLog, WhatsAppLog, Setting, User, Ticket, TicketComment
     )
     Base.metadata.create_all(bind=engine)
     _ensure_columns()

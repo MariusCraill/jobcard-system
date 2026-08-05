@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block page_title %}Tickets{% endblock %}
+{% block title %}{{ app_settings.company_name }} - Tickets{% endblock %}
+{% block header_actions %}
+<a href="{{ url_for('tickets.new_ticket') }}" class="btn btn-sm btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>New Ticket
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-life-preserver me-1"></i> Client Tickets</span>
+        <form method="GET" action="{{ url_for('tickets.list_tickets') }}" class="d-flex gap-2">
+            <select name="status" class="form-select form-select-sm" style="width:auto;">
+                <option value="">All Statuses</option>
+                {% for s in ['open','in_progress','resolved','closed','cancelled'] %}
+                <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s.replace('_',' ').title() }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn btn-sm btn-outline-secondary">Filter</button>
+        </form>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Client</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Job Card</th>
+                        <th>Logged</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in tickets %}
+                    <tr data-href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}">
+                        <td><a href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}" class="fw-medium">{{ t.ticket_number }}</a></td>
+                        <td>{{ t.subject[:60] }}{% if t.subject|length > 60 %}...{% endif %}</td>
+                        <td>{{ t.customer_name }}</td>
+                        <td><span class="badge bg-{{ {'low':'success','medium':'warning','high':'danger','critical':'danger','emergency':'dark'}.get(t.priority.value,'secondary') }}">{{ t.priority.value.upper() }}</span></td>
+                        <td><span class="badge bg-{{ {'open':'primary','in_progress':'info','resolved':'success','closed':'dark','cancelled':'danger'}.get(t.status.value,'secondary') }}">{{ t.status.value.replace('_',' ').title() }}</span></td>
+                        <td>
+                            {% if t.jobcard %}
+                            <a href="{{ url_for('jobcards.view_jobcard', jobcard_id=t.jobcard.id) }}">{{ t.jobcard.job_number }}</a>
+                            {% else %}<span class="text-muted">-</span>{% endif %}
+                        </td>
+                        <td class="small text-muted">{{ t.created_at.strftime('%Y-%m-%d') if t.created_at else '' }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No tickets found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
