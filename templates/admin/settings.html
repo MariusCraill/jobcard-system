@@ -35,7 +35,7 @@
             </div>
 
             <h5 class="text-primary mb-3"><i class="bi bi-envelope"></i> Email Settings</h5>
-            <div class="row g-3 mb-4">
+            <div class="row g-3 mb-3">
                 <div class="col-md-3">
                     <label class="form-label">Delivery Method</label>
                     <select name="email_method" class="form-select">
@@ -63,6 +63,20 @@
                 <div class="col-md-3">
                     <label class="form-label">SMTP Password</label>
                     <input type="password" name="smtp_pass" class="form-control" value="{{ current.get('smtp_pass', '') }}">
+                </div>
+            </div>
+            <div class="card bg-black bg-opacity-25 border-secondary mb-4">
+                <div class="card-body py-3">
+                    <form method="POST" action="{{ url_for('admin.test_email') }}" class="row g-2 align-items-end">
+                        <div class="col-md-5">
+                            <label class="form-label">Send Test Email To</label>
+                            <input type="email" name="test_email" class="form-control" placeholder="you@example.com">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-outline-info"><i class="bi bi-send me-1"></i>Send Test</button>
+                        </div>
+                        <div class="col-md-3 text-muted small">Save settings first, then test your SMTP details.</div>
+                    </form>
                 </div>
             </div>
 

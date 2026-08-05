@@ -1,3 +1,4 @@
+import re
 from datetime import datetime
 from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash
@@ -6,6 +7,8 @@ from database import db_session
 from models import User
 
 auth_bp = Blueprint("auth", __name__)
+
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
 def admin_required(f):
@@ -38,6 +41,55 @@ def login():
         flash("Invalid username or password", "danger")
 
     return render_template("auth/login.html")
+
+
+@auth_bp.route("/register", methods=["GET", "POST"])
+def register():
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard.index"))
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        full_name = request.form.get("full_name", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        errors = []
+        if not username or not full_name or not email:
+            errors.append("Full name, email and username are all required")
+        if not EMAIL_RE.match(email):
+            errors.append("Please enter a valid email address")
+        if db_session.query(User).filter(User.username == username).first():
+            errors.append("That username is already taken")
+        if email and db_session.query(User).filter(User.email == email).first():
+            errors.append("An account with that email already exists")
+        if len(password) < 6:
+            errors.append("Password must be at least 6 characters")
+        elif password != confirm:
+            errors.append("Passwords do not match")
+
+        if errors:
+            for e in errors:
+                flash(e, "danger")
+        else:
+            user = User(
+                username=username,
+                full_name=full_name,
+                email=email,
+                role="user",  # new self-service accounts are end users
+                is_active=True,
+            )
+            user.set_password(password)
+            db_session.add(user)
+            db_session.commit()
+            login_user(user)
+            user.last_login = datetime.utcnow()
+            db_session.commit()
+            flash("Account created. You can now log tickets and track your requests.", "success")
+            return redirect(url_for("dashboard.index"))
+
+    return render_template("auth/register.html")
 
 
 @auth_bp.route("/logout")

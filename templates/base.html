@@ -12,51 +12,53 @@
     <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="d-flex">
         <nav class="sidebar d-flex flex-column flex-shrink-0 p-3" id="sidebar" aria-label="Sidebar navigation">
-            <a href="/" class="d-flex align-items-center mb-3 text-decoration-none">
-                <i class="bi bi-ticket-detailed fs-4 me-2 text-primary"></i>
-                <span class="fs-5 fw-bold text-primary">{{ app_settings.company_name }}</span>
+            <a href="/" class="d-flex align-items-center mb-3 text-decoration-none sidebar-brand">
+                <i class="bi bi-ticket-detailed fs-4 me-2 text-primary sidebar-brand-icon"></i>
+                <span class="fs-5 fw-bold text-primary sidebar-brand-text">{{ app_settings.company_name }}</span>
             </a>
             <hr>
             <ul class="nav nav-pills flex-column mb-auto">
                 <li class="nav-item">
                     <a href="/" class="nav-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
-                        <i class="bi bi-speedometer2 me-2"></i> Dashboard
-                    </a>
-                </li>
-                <li>
-                    <a href="/jobcards" class="nav-link {% if 'jobcards' in request.path %}active{% endif %}">
-                        <i class="bi bi-ticket me-2"></i> Job Cards
+                        <i class="bi bi-speedometer2 me-2"></i><span class="nav-text">Dashboard</span>
                     </a>
                 </li>
                 <li>
                     <a href="/tickets" class="nav-link {% if 'tickets' in request.path %}active{% endif %}">
-                        <i class="bi bi-life-preserver me-2"></i> Tickets
+                        <i class="bi bi-life-preserver me-2"></i><span class="nav-text">Tickets</span>
+                    </a>
+                </li>
+                {% if current_user.role != 'user' %}
+                <li>
+                    <a href="/jobcards" class="nav-link {% if 'jobcards' in request.path %}active{% endif %}">
+                        <i class="bi bi-ticket me-2"></i><span class="nav-text">Job Cards</span>
                     </a>
                 </li>
                 <li>
                     <a href="/customers" class="nav-link {% if 'customers' in request.path %}active{% endif %}">
-                        <i class="bi bi-people me-2"></i> Customers
+                        <i class="bi bi-people me-2"></i><span class="nav-text">Customers</span>
                     </a>
                 </li>
                 <li>
                     <a href="/technicians" class="nav-link {% if 'technicians' in request.path %}active{% endif %}">
-                        <i class="bi bi-tools me-2"></i> Technicians
+                        <i class="bi bi-tools me-2"></i><span class="nav-text">Technicians</span>
                     </a>
                 </li>
                 <li>
                     <a href="/reports" class="nav-link {% if 'reports' in request.path %}active{% endif %}">
-                        <i class="bi bi-bar-chart me-2"></i> Reports
+                        <i class="bi bi-bar-chart me-2"></i><span class="nav-text">Reports</span>
                     </a>
                 </li>
+                {% endif %}
                 {% if current_user.role == 'admin' %}
                 <li>
                     <a href="/admin" class="nav-link {% if 'admin' in request.path and 'users' not in request.path %}active{% endif %}">
-                        <i class="bi bi-gear me-2"></i> Admin
+                        <i class="bi bi-gear me-2"></i><span class="nav-text">Admin</span>
                     </a>
                 </li>
                 <li>
                     <a href="/admin/users" class="nav-link {% if 'users' in request.path %}active{% endif %}">
-                        <i class="bi bi-person-badge me-2"></i> Users
+                        <i class="bi bi-person-badge me-2"></i><span class="nav-text">Users</span>
                     </a>
                 </li>
                 {% endif %}

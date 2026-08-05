@@ -10,7 +10,8 @@ login_manager = LoginManager()
 # Which blueprint prefixes each role may access (admin = everything).
 ROLE_ALLOWED_PREFIXES = {
     "technician": ("dashboard.", "jobcards.", "customers.", "technicians.", "reports.", "tickets."),
-    "user": ("dashboard.", "jobcards.", "customers.", "tickets."),
+    # End users (self-registered) only see the ticket portal + their own tickets.
+    "user": ("dashboard.", "tickets."),
 }
 
 
@@ -58,6 +59,8 @@ def create_app():
             return  # the api blueprint handles its own auth (session or API key)
         if request.endpoint in ("tickets.new_ticket", "tickets.ticket_lookup"):
             return  # client-facing ticket pages
+        if request.endpoint == "dashboard.index" and not current_user.is_authenticated:
+            return  # the landing page renders its own content for visitors
         if not current_user.is_authenticated:
             return redirect(url_for("auth.login", next=request.path))
         allowed = ROLE_ALLOWED_PREFIXES.get(current_user.role)

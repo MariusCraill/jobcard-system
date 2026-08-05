@@ -40,13 +40,19 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar.querySelectorAll('.nav-link').forEach(el => {
             el.style.textAlign = '';
             el.style.padding = '';
+            el.style.fontSize = '';
+            el.style.whiteSpace = '';
+            el.style.overflow = '';
         });
         sidebar.querySelectorAll('.nav-link i').forEach(el => {
             el.style.marginRight = '';
+            el.style.fontSize = '';
         });
-        document.querySelectorAll('.sidebar .nav-link span, .sidebar .fs-5, .sidebar hr + div').forEach(el => {
+        document.querySelectorAll('.nav-text, .sidebar .sidebar-brand-text, .sidebar hr + div').forEach(el => {
             el.style.display = '';
         });
+        const brandIcon = document.querySelector('.sidebar-brand-icon');
+        if (brandIcon) brandIcon.style.marginRight = '';
     }
 
     if (toggleBtn && sidebar) {
@@ -57,20 +63,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     openSidebar();
                 }
+            } else if (sidebar.style.width === '60px') {
+                resetDesktopState();
             } else {
-                if (sidebar.style.width === '60px') {
-                    resetDesktopState();
-                } else {
-                    sidebar.style.width = '60px';
-                    sidebar.querySelectorAll('.nav-link span, .sidebar .fs-5, .sidebar hr + div').forEach(el => el.style.display = 'none');
-                    sidebar.querySelectorAll('.nav-link').forEach(el => {
-                        el.style.textAlign = 'center';
-                        el.style.padding = '8px';
-                    });
-                    sidebar.querySelectorAll('.nav-link i').forEach(el => {
-                        el.style.marginRight = '0';
-                    });
-                }
+                sidebar.style.width = '60px';
+                sidebar.style.padding = '12px 8px';
+                document.querySelectorAll('.nav-text, .sidebar .sidebar-brand-text, .sidebar hr + div').forEach(el => el.style.display = 'none');
+                sidebar.querySelectorAll('.nav-link').forEach(el => {
+                    el.style.textAlign = 'center';
+                    el.style.padding = '10px 0';
+                    el.style.fontSize = '0';
+                    el.style.whiteSpace = 'nowrap';
+                    el.style.overflow = 'hidden';
+                });
+                sidebar.querySelectorAll('.nav-link i').forEach(el => {
+                    el.style.marginRight = '0';
+                    el.style.fontSize = '18px';
+                });
+                const brandIcon = document.querySelector('.sidebar-brand-icon');
+                if (brandIcon) brandIcon.style.marginRight = '0';
             }
         });
 

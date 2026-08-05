@@ -51,7 +51,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
                             <label class="form-label required">Your Name</label>
-                            <input type="text" name="customer_name" class="form-control" required>
+                            <input type="text" name="customer_name" class="form-control" required value="{{ prefill.get('customer_name', '') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Company</label>
@@ -61,7 +61,7 @@
                     <div class="row g-2 mb-2">
                         <div class="col-md-6">
                             <label class="form-label">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="For tracking your ticket">
+                            <input type="email" name="email" class="form-control" placeholder="For tracking your ticket" value="{{ prefill.get('email', '') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Phone</label>
@@ -92,8 +92,9 @@
                 </form>
 
                 <hr>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between flex-wrap gap-2">
                     <a href="{{ url_for('tickets.ticket_lookup') }}" class="small"><i class="bi bi-search me-1"></i>Track a ticket</a>
+                    <a href="{{ url_for('auth.register') }}" class="small"><i class="bi bi-person-plus me-1"></i>Create an account</a>
                     <a href="{{ url_for('auth.login') }}" class="small text-muted"><i class="bi bi-box-arrow-in-right me-1"></i>Staff sign in</a>
                 </div>
             </div>

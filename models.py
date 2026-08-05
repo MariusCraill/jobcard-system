@@ -281,6 +281,7 @@ class EmailLog(Base):
     __tablename__ = "email_logs"
     id = Column(Integer, primary_key=True)
     jobcard_id = Column(Integer, ForeignKey("jobcards.id"))
+    ticket_id = Column(Integer, ForeignKey("tickets.id"))
     recipient = Column(String(200), nullable=False)
     subject = Column(String(300))
     body_preview = Column(String(200))
@@ -323,6 +324,7 @@ class User(UserMixin, Base):
     username = Column(String(80), nullable=False, unique=True)
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(150))
+    email = Column(String(200))
     role = Column(String(30), default="user")  # admin | technician | user
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)

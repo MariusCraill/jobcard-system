@@ -55,6 +55,72 @@
 </div>
 
 <div class="row g-3 mb-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-life-preserver me-1"></i> Ticket Summary</span>
+                <a href="/tickets" class="btn btn-outline-primary btn-sm">View All Tickets</a>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    {% for label, count, color, status_val in ticket_status_counts %}
+                    <div class="col-6 col-md-3">
+                        <a href="/tickets?status={{ status_val }}" class="card card-body border-0 h-100 text-decoration-none card-click" style="background:#2c3034;">
+                            <h6 class="card-subtitle text-muted mb-1">{{ label }}</h6>
+                            <h2 class="card-text mb-0" style="color:{{ color }};">{{ count }}</h2>
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="text-muted small">
+                    {% for label, count, color, status_val in ticket_status_counts %}
+                    <a href="/tickets?status={{ status_val }}" class="d-block text-decoration-none">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-light-emphasis">{{ label }}</span>
+                            <span class="fw-bold">{{ count }}</span>
+                        </div>
+                        <div class="progress mb-2" style="height:6px;">
+                            <div class="progress-bar" style="width:{% if ticket_total > 0 %}{{ (count / ticket_total * 100)|round }}{% else %}0{% endif %}%;background:{{ color }};"></div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                    <div class="mt-2">Total: {{ ticket_total }} tickets</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header"><i class="bi bi-clock-history me-1"></i> Recent Tickets</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Ticket</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in recent_tickets %}
+                            <tr data-href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}">
+                                <td><a href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}" class="fw-medium">{{ t.ticket_number }}</a></td>
+                                <td class="small">{{ t.customer_name[:25] }}</td>
+                                <td><span class="badge bg-{{ {'open':'primary','in_progress':'info','resolved':'success','closed':'dark','cancelled':'danger'}.get(t.status.value,'secondary') }}">{{ t.status.value.replace('_',' ').title() }}</span></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted py-4">No tickets yet</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
     <div class="col-md-8">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">

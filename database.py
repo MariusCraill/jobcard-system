@@ -68,3 +68,19 @@ def _ensure_columns():
             db_session.commit()
         except Exception:
             db_session.rollback()
+
+    user_cols = {c["name"] for c in insp.get_columns("users")} if "users" in insp.get_table_names() else set()
+    if "email" not in user_cols:
+        try:
+            db_session.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR(200)"))
+            db_session.commit()
+        except Exception:
+            db_session.rollback()
+
+    email_log_cols = {c["name"] for c in insp.get_columns("email_logs")} if "email_logs" in insp.get_table_names() else set()
+    if "ticket_id" not in email_log_cols:
+        try:
+            db_session.execute(text("ALTER TABLE email_logs ADD COLUMN ticket_id INTEGER"))
+            db_session.commit()
+        except Exception:
+            db_session.rollback()

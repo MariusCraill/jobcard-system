@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block page_title %}My Tickets{% endblock %}
+{% block title %}{{ app_settings.company_name }} - My Tickets{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('tickets.new_ticket') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-lg me-1"></i>Log a Ticket</a>
+<a href="{{ url_for('tickets.ticket_lookup') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-search me-1"></i>Track a Ticket</a>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h4 class="mb-1">Welcome, {{ current_user.full_name or current_user.username }}</h4>
+    <div class="text-muted">Track your support requests below.</div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <a href="/tickets?status=open" class="card card-body border-primary h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Open</h6>
+                    <h2 class="card-text mb-0 text-primary">{{ t_counts.open }}</h2>
+                </div>
+                <i class="bi bi-life-preserver fs-2 text-primary opacity-50"></i>
+            </div>
+            <small class="text-muted">Waiting for us</small>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="/tickets?status=in_progress" class="card card-body border-info h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">In Progress</h6>
+                    <h2 class="card-text mb-0 text-info">{{ t_counts.in_progress }}</h2>
+                </div>
+                <i class="bi bi-gear-wide-connected fs-2 text-info opacity-50"></i>
+            </div>
+            <small class="text-muted">We are on it</small>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="/tickets?status=resolved" class="card card-body border-success h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Resolved</h6>
+                    <h2 class="card-text mb-0 text-success">{{ t_counts.resolved }}</h2>
+                </div>
+                <i class="bi bi-check-circle fs-2 text-success opacity-50"></i>
+            </div>
+            <small class="text-muted">Work finished</small>
+        </a>
+    </div>
+    <div class="col-md-3 col-6">
+        <a href="/tickets?status=closed" class="card card-body border-secondary h-100 text-decoration-none card-click">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="card-subtitle text-muted mb-1">Closed</h6>
+                    <h2 class="card-text mb-0 text-light-emphasis">{{ t_counts.closed }}</h2>
+                </div>
+                <i class="bi bi-check-square fs-2 text-light-emphasis opacity-50"></i>
+            </div>
+            <small class="text-muted">Completed</small>
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-clock-history me-1"></i> My Tickets</span>
+        <a href="{{ url_for('tickets.new_ticket') }}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> New Ticket</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Ticket #</th>
+                        <th>Subject</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th>Logged</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in my_tickets %}
+                    <tr data-href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}">
+                        <td><a href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}" class="fw-medium">{{ t.ticket_number }}</a></td>
+                        <td>{{ t.subject[:60] }}{% if t.subject|length > 60 %}...{% endif %}</td>
+                        <td><span class="badge bg-{{ {'low':'success','medium':'warning','high':'danger','critical':'danger','emergency':'dark'}.get(t.priority.value,'secondary') }}">{{ t.priority.value.upper() }}</span></td>
+                        <td><span class="badge bg-{{ {'open':'primary','in_progress':'info','resolved':'success','closed':'dark','cancelled':'danger'}.get(t.status.value,'secondary') }}">{{ t.status.value.replace('_',' ').title() }}</span></td>
+                        <td class="small text-muted">{{ t.created_at.strftime('%Y-%m-%d') if t.created_at else '' }}</td>
+                        <td><a href="{{ url_for('tickets.view_ticket', ticket_id=t.id) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">
+                        No tickets yet. <a href="{{ url_for('tickets.new_ticket') }}">Log your first ticket</a>
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

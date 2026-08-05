@@ -23,6 +23,68 @@ def build_mailto_link(to_email, subject, body_text):
     return f"mailto:{to_email}?{params}"
 
 
+def _send_smtp(to_email, subject, body_text, jobcard_id=None, ticket_id=None):
+    """Send a plain-text email via the configured SMTP server and log the result."""
+    from_email = _get_setting("smtp_from_email", os.environ.get("SMTP_FROM_EMAIL", "noreply@jobcardsystem.co.za"))
+    smtp_host = _get_setting("smtp_host", os.environ.get("SMTP_HOST", ""))
+    smtp_port = int(_get_setting("smtp_port", os.environ.get("SMTP_PORT", "587")))
+    smtp_user = _get_setting("smtp_user", os.environ.get("SMTP_USER", ""))
+    smtp_pass = _get_setting("smtp_pass", os.environ.get("SMTP_PASS", ""))
+
+    if not smtp_host:
+        log = EmailLog(jobcard_id=jobcard_id, ticket_id=ticket_id, recipient=to_email,
+                       subject=subject, body_preview=body_text[:200], status="failed",
+                       error_message="SMTP not configured")
+        db_session.add(log)
+        db_session.commit()
+        return False, "SMTP not configured"
+
+    msg = MIMEMultipart()
+    msg["From"] = from_email
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(body_text, "plain"))
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
+            if smtp_user:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+            server.send_message(msg)
+        log = EmailLog(jobcard_id=jobcard_id, ticket_id=ticket_id, recipient=to_email,
+                       subject=subject, body_preview=body_text[:200], status="sent")
+        db_session.add(log)
+        db_session.commit()
+        return True, "Email sent successfully"
+    except Exception as e:
+        log = EmailLog(jobcard_id=jobcard_id, ticket_id=ticket_id, recipient=to_email,
+                       subject=subject, body_preview=body_text[:200], status="failed",
+                       error_message=str(e))
+        db_session.add(log)
+        db_session.commit()
+        return False, str(e)
+
+
+def send_ticket_email(ticket, subject, body):
+    """Send a ticket notification to the client (no-op if not configured)."""
+    if not ticket.email:
+        return False, "No recipient email address"
+    if _get_setting("email_method", "smtp") != "smtp":
+        return False, "SMTP not configured (email_method is not smtp)"
+    return _send_smtp(ticket.email, subject, body, ticket_id=ticket.id)
+
+
+def send_test_email(to_email):
+    """Send a test message using the configured SMTP settings."""
+    subject = f"Test email from {_get_setting('company_name', 'JobCard System')}"
+    body = (
+        "This is a test email from your Job Card System.\n\n"
+        "If you received this, your SMTP settings are working correctly.\n\n"
+        f"Regards,\n{_get_setting('company_name', 'Support Team')}"
+    )
+    return _send_smtp(to_email, subject, body)
+
+
 def send_jobcard_email(to_email, subject, body_text, pdf_bytes=None, pdf_filename=None, jobcard_id=None):
     if not to_email:
         return False, "No recipient email address"

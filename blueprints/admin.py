@@ -3,6 +3,7 @@ from flask_login import current_user
 from database import db_session
 from models import Setting, EmailLog, WhatsAppLog, User
 from blueprints.auth import admin_required
+from utils.email_sender import send_test_email
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -62,6 +63,18 @@ def settings():
 
     current = get_all_settings()
     return render_template("admin/settings.html", **locals())
+
+
+@admin_bp.route("/settings/test-email", methods=["POST"])
+@admin_required
+def test_email():
+    to_email = request.form.get("test_email", "").strip()
+    if not to_email:
+        flash("Enter an email address to send the test to", "warning")
+        return redirect(url_for("admin.settings"))
+    ok, message = send_test_email(to_email)
+    flash(message, "success" if ok else "danger")
+    return redirect(url_for("admin.settings"))
 
 
 @admin_bp.route("/email-logs")

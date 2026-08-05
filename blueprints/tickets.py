@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from functools import wraps
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import current_user
 from database import db_session, get_or_404
@@ -7,6 +8,7 @@ from models import (
 )
 from blueprints.admin import get_setting
 from blueprints.jobcards import _next_job_number
+from utils.email_sender import send_ticket_email
 
 tickets_bp = Blueprint("tickets", __name__)
 
@@ -20,6 +22,40 @@ STATUS_BADGES = {
     "closed": "dark",
     "cancelled": "danger",
 }
+
+
+def staff_required(f):
+    """End users may view/track their own tickets but not manage them."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for("auth.login", next=request.path))
+        if current_user.role == "user":
+            flash("You do not have permission to perform that action", "danger")
+            return redirect(url_for("tickets.list_tickets"))
+        return f(*args, **kwargs)
+    return wrapper
+
+
+def _user_ticket_filter(query):
+    """Restrict a ticket query to the current end user's own tickets."""
+    if current_user.role != "user":
+        return query
+    email = (current_user.email or "").strip().lower()
+    if email:
+        from sqlalchemy import func
+        return query.filter(func.lower(Ticket.email) == email)
+    return query.filter(Ticket.customer_name == (current_user.full_name or ""))
+
+
+def _can_access(ticket):
+    """Whether the current user may view this ticket (end users only see their own)."""
+    if current_user.role != "user":
+        return True
+    email = (current_user.email or "").strip().lower()
+    if email and ticket.email and ticket.email.strip().lower() == email:
+        return True
+    return bool(ticket.customer_name and ticket.customer_name == (current_user.full_name or ""))
 
 
 def _to_int(value, default=0):
@@ -63,17 +99,21 @@ def new_ticket():
         except KeyError:
             priority = Priority.medium
 
+        email = request.form.get("email", "").strip()
+        if current_user.is_authenticated and not email:
+            email = current_user.email or ""
+
         ticket = Ticket(
             ticket_number=_next_ticket_number(),
             customer_name=customer_name,
             company=request.form.get("company", "").strip(),
-            email=request.form.get("email", "").strip(),
+            email=email,
             phone=request.form.get("phone", "").strip(),
             subject=subject,
             description=description,
             priority=priority,
             status=TicketStatus.open,
-            source="web",
+            source="portal" if current_user.is_authenticated else "web",
         )
         db_session.add(ticket)
         db_session.commit()
@@ -82,9 +122,29 @@ def new_ticket():
             "Keep this number and your email to track the ticket.",
             "success",
         )
+        if ticket.email:
+            send_ticket_email(
+                ticket,
+                subject=f"Ticket {ticket.ticket_number} received - {ticket.subject}",
+                body=(
+                    f"Hello {ticket.customer_name},\n\n"
+                    f"Thank you. Your ticket {ticket.ticket_number} has been logged.\n\n"
+                    f"Subject: {ticket.subject}\n"
+                    f"Priority: {ticket.priority.value.upper()}\n\n"
+                    "Keep your ticket number handy. You can track progress at any time "
+                    "using the ticket tracking page, or by logging in to your account.\n\n"
+                    f"Regards,\n{get_setting('company_name', 'Support Team')}"
+                ),
+            )
         return render_template("tickets/public_track.html", ticket=ticket, comments=[])
 
-    return render_template("tickets/public_new.html")
+    prefill = {}
+    if current_user.is_authenticated:
+        prefill = {
+            "customer_name": current_user.full_name or current_user.username,
+            "email": current_user.email or "",
+        }
+    return render_template("tickets/public_new.html", prefill=prefill)
 
 
 @tickets_bp.route("/lookup", methods=["GET", "POST"])
@@ -123,6 +183,7 @@ def list_tickets():
             query = query.filter(Ticket.status == TicketStatus[status_filter])
         except KeyError:
             pass
+    query = _user_ticket_filter(query)
     tickets = query.order_by(Ticket.created_at.desc()).all()
     return render_template("tickets/list.html", tickets=tickets, status_filter=status_filter)
 
@@ -130,6 +191,9 @@ def list_tickets():
 @tickets_bp.route("/<int:ticket_id>")
 def view_ticket(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
+    if not _can_access(ticket):
+        flash("You do not have permission to view that ticket", "danger")
+        return redirect(url_for("tickets.list_tickets"))
     comments = db_session.query(TicketComment).filter(
         TicketComment.ticket_id == ticket.id
     ).order_by(TicketComment.created_at.asc()).all()
@@ -137,6 +201,7 @@ def view_ticket(ticket_id):
 
 
 @tickets_bp.route("/<int:ticket_id>/edit", methods=["GET", "POST"])
+@staff_required
 def edit_ticket(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
     if request.method == "POST":
@@ -160,6 +225,7 @@ def edit_ticket(ticket_id):
 
 
 @tickets_bp.route("/<int:ticket_id>/status", methods=["POST"])
+@staff_required
 def update_ticket_status(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
     try:
@@ -173,10 +239,24 @@ def update_ticket_status(ticket_id):
     ticket.updated_at = datetime.utcnow()
     db_session.commit()
     flash(f"Ticket status changed to {new_status.value.replace('_', ' ').title()}", "success")
+    if ticket.email and new_status in (TicketStatus.resolved, TicketStatus.closed):
+        send_ticket_email(
+            ticket,
+            subject=f"Update on ticket {ticket.ticket_number} - {ticket.subject}",
+            body=(
+                f"Hello {ticket.customer_name},\n\n"
+                f"Your ticket {ticket.ticket_number} has been updated.\n\n"
+                f"New status: {new_status.value.replace('_', ' ').title()}\n\n"
+                "You can track the full history of this ticket at any time using the "
+                "ticket tracking page, or by logging in to your account.\n\n"
+                f"Regards,\n{get_setting('company_name', 'Support Team')}"
+            ),
+        )
     return redirect(url_for("tickets.view_ticket", ticket_id=ticket.id))
 
 
 @tickets_bp.route("/<int:ticket_id>/comment", methods=["POST"])
+@staff_required
 def add_ticket_comment(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
     body = request.form.get("body", "").strip()
@@ -198,6 +278,7 @@ def add_ticket_comment(ticket_id):
 
 
 @tickets_bp.route("/<int:ticket_id>/convert", methods=["POST"])
+@staff_required
 def convert_to_jobcard(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
     if ticket.jobcard_id:
@@ -248,6 +329,7 @@ def convert_to_jobcard(ticket_id):
 
 
 @tickets_bp.route("/<int:ticket_id>/delete", methods=["POST"])
+@staff_required
 def delete_ticket(ticket_id):
     ticket = get_or_404(Ticket, ticket_id)
     db_session.query(TicketComment).filter(TicketComment.ticket_id == ticket.id).delete(synchronize_session=False)
